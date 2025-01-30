@@ -1,0 +1,7 @@
+langchain
+pydantic-settings
+python-dotenv
+requests
+unstructured[pdf,md]
+faiss-cpu
+sentence-transformers
