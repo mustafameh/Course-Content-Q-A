@@ -10,13 +10,15 @@ from src.chat_bot import ChatBot
 def initialize_system():
     # Load or create vector store
     vector_store = VectorStore()
-    try:
-        vector_store.load_local()
-    except:
-        print("Creating new vector store...")
-        documents = load_documents()
-        vector_store.create_from_documents(documents)
-    
+    # try:
+    #     vector_store.load_local()
+    # except:
+    #     print("Creating new vector store...")
+    #     documents = load_documents()
+    #     vector_store.create_from_documents(documents)
+    print("Creating new vector store...")
+    documents = load_documents()
+    vector_store.create_from_documents(documents)
     return ChatBot(vector_store.vector_store)
 
 def main():
