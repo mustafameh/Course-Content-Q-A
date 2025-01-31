@@ -6,6 +6,7 @@ Uses UnstructuredFileLoader to handle multiple file types.
 from langchain.document_loaders import DirectoryLoader, UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
+from src.config import settings
 
 def load_documents(directory="data/knowledge_base"):
     """
@@ -25,8 +26,8 @@ def load_documents(directory="data/knowledge_base"):
     # Load and split documents
     raw_documents = loader.load()
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200
+        chunk_size=settings.CHUNK_SIZE,
+        chunk_overlap=settings.CHUNK_OVERLAP
     )
     
     # Add metadata (source file) to each document

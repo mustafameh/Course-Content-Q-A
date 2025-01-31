@@ -90,6 +90,7 @@ class ChatBot:
         for doc in context:
             source = os.path.basename(doc.metadata.get("source", "unknown"))
             formatted_context.append(f"[Source: {source}] {doc.page_content}")
+            formatted_context.append(" + ")
             
             
         entity_context = f"| Known Entities: {', '.join(self.entity_buffer)} |" if self.entity_buffer else ""
@@ -102,7 +103,7 @@ class ChatBot:
         If unsure, say so. Ask for clarification if pronoun is ambigious. Tell them to rephrase the query with full nouns. 
         
         Information from current "new Context":
-        {' '.join(formatted_context)}
+        {', '.join(formatted_context)}
         
         Question: {query}
         
@@ -138,7 +139,7 @@ class ChatBot:
         augmented_query = self._augment_query(question)
         print("Query to vector base:", augmented_query)
         # Retrieve and filter documents
-        docs_with_scores = self.vector_store.similarity_search_with_score(augmented_query, k=10)
+        docs_with_scores = self.vector_store.similarity_search_with_score(augmented_query, k=settings.NUMBER_OF_CHUNKS)
         relevant_docs = [doc for doc, score in docs_with_scores if score >= settings.SIMILARITY_THRESHOLD]
         
         if not relevant_docs:
