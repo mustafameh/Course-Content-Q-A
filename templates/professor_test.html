@@ -44,6 +44,13 @@
             <input type="number" id="delete-file-id" placeholder="File ID">
             <button onclick="deleteFile()">Delete File</button>
         </div>
+        <!-- Add this new section -->
+        <div class="section">
+            <h3>Knowledge Base Management</h3>
+            <input type="number" id="kb-subject-id" placeholder="Subject ID">
+            <button onclick="checkKnowledgeBase()">Check Status</button>
+            <button onclick="createKnowledgeBase()">Create/Update Knowledge Base</button>
+        </div>
 
 
 
@@ -59,7 +66,7 @@
 
 
 
-        
+
 
         <div id="response" class="response"></div>
     </div>
@@ -120,12 +127,12 @@
                 showResponse({ error: error.message });
             }
         }
-    </script>
+    
     <!-- Add these inside the container div -->
 
 
-<!-- Add these JavaScript functions -->
-<script>
+
+
     // Add these functions in the existing script tag
     async function deleteSubject() {
         const subjectId = document.getElementById('delete-subject-id').value;
@@ -152,6 +159,30 @@
             showResponse({ error: error.message });
         }
     }
+        async function checkKnowledgeBase() {
+        const subjectId = document.getElementById('kb-subject-id').value;
+        try {
+            const response = await fetch(`/professor/subjects/${subjectId}/knowledge-base`);
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+
+    async function createKnowledgeBase() {
+        const subjectId = document.getElementById('kb-subject-id').value;
+        try {
+            const response = await fetch(`/professor/subjects/${subjectId}/knowledge-base`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+    
 </script>
 </body>
 </html>

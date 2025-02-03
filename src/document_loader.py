@@ -9,36 +9,41 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 from src.config import settings
 
-def load_documents(directory="data/knowledge_base"):
-    """
-    Load documents from directory using UnstructuredFileLoader.
-    Returns list of processed documents with metadata.
-    """
-    # Initialize DirectoryLoader with UnstructuredFileLoader
-    loader = DirectoryLoader(
-        directory,
-        glob="**/[!.]*",  # ignore hidden files
-        use_multithreading=True,
-        show_progress=True,
-        loader_cls=UnstructuredFileLoader,  # Use UnstructuredFileLoader for multiple file types
-        loader_kwargs={"mode": "elements"}  # Optional: Split documents into elements
-    )
-    
-    # Load and split documents
-    raw_documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=settings.CHUNK_SIZE,
-        chunk_overlap=settings.CHUNK_OVERLAP
-    )
-    
-    # Add metadata (source file) to each document
-    documents = []
-    for doc in raw_documents:
-        metadata = doc.metadata
-        metadata["source"] = metadata.get("source", "unknown")  # Ensure "source" exists
-        documents.append(Document(
-            page_content=doc.page_content,
-            metadata=metadata
-        ))
-    
-    return text_splitter.split_documents(documents)
+"""document_loader.py"""
+from langchain.document_loaders import UnstructuredFileLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.schema import Document
+from src.config import settings
+from typing import List
+import os
+
+class SubjectDocumentLoader:
+    def __init__(self):
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=settings.CHUNK_SIZE,
+            chunk_overlap=settings.CHUNK_OVERLAP
+        )
+
+    def load_subject_documents(self, file_paths: List[str]) -> List[Document]:
+        """Load documents from provided file paths"""
+        documents = []
+        
+        for file_path in file_paths:
+            if not os.path.exists(file_path):
+                print(f"Warning: File not found - {file_path}")
+                continue
+                
+            try:
+                loader = UnstructuredFileLoader(file_path)
+                docs = loader.load()
+                
+                # Add metadata
+                for doc in docs:
+                    doc.metadata["source"] = file_path
+                
+                documents.extend(docs)
+            except Exception as e:
+                print(f"Error loading file {file_path}: {str(e)}")
+                continue
+
+        return self.text_splitter.split_documents(documents)
