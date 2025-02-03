@@ -5,7 +5,7 @@ Covers user creation, login, and session management
 
 import pytest
 from src.models import Base, User
-from src.auth.routes import auth_bp, configure_auth
+from auth import auth_bp, configure_auth
 from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
