@@ -136,12 +136,10 @@ class ChatBot:
         return response.json()["choices"][0]["message"]["content"]
 
     def query(self, question: str) -> str:
-    
-    
-    
         # Augment query with entities
         augmented_query = self._augment_query(question)
         print("Query to vector base:", augmented_query)
+        
         # Retrieve and filter documents
         docs_with_scores = self.vector_store.similarity_search_with_score(augmented_query, k=settings.NUMBER_OF_CHUNKS)
         relevant_docs = [doc for doc, score in docs_with_scores if score >= settings.SIMILARITY_THRESHOLD]
@@ -161,15 +159,19 @@ class ChatBot:
         response = self._openrouter_request(prompt)
         
         # Process response
-        cited_sources = list(set(re.findall(r"\[Source: (.*?)\]", response))) or ["general knowledge"]
-        clean_response = re.sub(r"\[Source: .*?\]", "", response).strip()
+        # Extract sources from the relevant documents instead of the response
+        sources = list(set([os.path.basename(doc.metadata.get("source", "unknown")) 
+                        for doc in relevant_docs]))
+        
+        # Clean any source annotations that might be in the response
+        clean_response = re.sub(r"$$Source:.*?$$", "", response).strip()
         
         # Update history
         self.conversation_history.append({
             "question": question,
             "response": clean_response,
-            "sources": cited_sources,
+            "sources": sources,
             "entities": list(self.entity_buffer)
         })
         
-        return f"{clean_response}\n\nSources: {', '.join(cited_sources)}"
+        return f"{clean_response}\n\nSources: {', '.join(sources)}"

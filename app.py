@@ -29,7 +29,7 @@ def home():
 def professor_test():
     return render_template('professor_test.html')
 
-from src.chat import chat_bp
+from src.chat_bot_endpoints import chat_bp
 
 # Add these with your other blueprint registrations
 app.register_blueprint(chat_bp)
