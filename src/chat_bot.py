@@ -1,4 +1,5 @@
 """
+chat_bot.py
 Main chatbot class handling query processing and OpenRouter API communication.
 Includes conversation history management and retrieval-augmented generation.
 """

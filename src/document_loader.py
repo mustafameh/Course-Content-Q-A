@@ -1,4 +1,5 @@
 """
+document_loader.py
 Loads and processes documents from the knowledge base directory.
 Uses UnstructuredFileLoader to handle multiple file types.
 """

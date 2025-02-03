@@ -96,7 +96,7 @@ Question Embedding
       ↓
 Similarity Search (Vector Store)
       ↓
-Retrieve Top k Documents
+Retrieve Top k Documents chunks
       ↓
 Extract Context and Sources
       ↓

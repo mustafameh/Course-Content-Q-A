@@ -1,4 +1,5 @@
-""" Manages vector store creation and similarity search using FAISS.
+""" vector_store.py
+Manages vector store creation and similarity search using FAISS.
 Handles embedding model initialization and storage persistence.
 """
 

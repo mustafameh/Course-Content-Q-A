@@ -1,4 +1,5 @@
 """
+config.py
 Handles configuration and environment variables for the project.
 Uses pydantic settings for validation.
 """

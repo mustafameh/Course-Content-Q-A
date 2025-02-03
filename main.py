@@ -1,4 +1,7 @@
+
 """
+main.py 
+
 Main entry point for the chatbot application.
 Handles initialization and user interaction loop.
 """
