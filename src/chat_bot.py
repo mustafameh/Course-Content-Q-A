@@ -14,6 +14,7 @@ from flair.data import Sentence
 from typing import List, Dict
 from langchain.schema import Document
 from src.config import settings
+
 # Load Flair NER model
 flair_tagger = SequenceTagger.load("flair/ner-english")
 
@@ -21,8 +22,9 @@ flair_tagger = SequenceTagger.load("flair/ner-english")
 
 
 class ChatBot:
-    def __init__(self, vector_store):
+    def __init__(self, vector_store, subject_name: str):
         self.vector_store = vector_store
+        self.subject_name = subject_name
         self.conversation_history: List[Dict] = []
         self.entity_buffer = set()
         self.ner_pipeline = spacy.load("en_core_web_sm")
@@ -83,25 +85,26 @@ class ChatBot:
 
     def _format_prompt(self, query: str, context: List[Document]) -> str:
         """Format prompt with conversation history and context"""
-        # Get truncated history
         history_text = self._get_truncated_history()
         
-        # Format context with sources
         formatted_context = []
         for doc in context:
             source = os.path.basename(doc.metadata.get("source", "unknown"))
             formatted_context.append(f"[Source: {source}] {doc.page_content}")
             formatted_context.append(" + ")
             
-            
         entity_context = f"| Known Entities: {', '.join(self.entity_buffer)} |" if self.entity_buffer else ""
-        # Build full prompt
-        prompt = f"""Conversation History:
+        
+        prompt = f"""You are an AI assistant helping with questions about the subject: {self.subject_name}.
+        
+        Conversation History:
         {history_text}
         :end of conversation history. Known entities: {entity_context}.  
+        
         Answer the question using the new context below and if needed the history.
-       
-        If unsure, say so. Ask for clarification if pronoun is ambigious. Tell them to rephrase the query with full nouns. 
+        If unsure, say so. Ask for clarification if pronoun is ambiguous. 
+        Tell them to rephrase the query with full nouns.
+        Stay focused on the subject matter of {self.subject_name}.
         
         Information from current "new Context":
         {', '.join(formatted_context)}
@@ -110,7 +113,7 @@ class ChatBot:
         
         Answer:"""
         
-        print(prompt)
+        print(f"Generated prompt for {self.subject_name}:", prompt)
         return prompt
 
     def _openrouter_request(self, prompt: str) -> str:

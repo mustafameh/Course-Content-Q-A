@@ -29,5 +29,15 @@ def home():
 def professor_test():
     return render_template('professor_test.html')
 
+from src.chat import chat_bp
+
+# Add these with your other blueprint registrations
+app.register_blueprint(chat_bp)
+
+# Add this route
+@app.route('/chat')
+def chat():
+    return render_template('chat.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
