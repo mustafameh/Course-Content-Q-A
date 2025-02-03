@@ -15,11 +15,19 @@ app.register_blueprint(auth_bp)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+from src.professor import professor_bp
+
+# Add this line with your other blueprint registrations
+app.register_blueprint(professor_bp)
 
 # Basic routes for testing
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/professor-test')
+def professor_test():
+    return render_template('professor_test.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

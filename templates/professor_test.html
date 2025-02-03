@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Professor Functions Test</title>
+    <style>
+        .container { max-width: 800px; margin: 50px auto; padding: 20px; }
+        .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+        .response { margin-top: 10px; padding: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h3>Create Subject</h3>
+            <input type="text" id="subject-name" placeholder="Subject Name">
+            <button onclick="createSubject()">Create Subject</button>
+        </div>
+
+        <div class="section">
+            <h3>Add File to Subject</h3>
+            <input type="number" id="subject-id" placeholder="Subject ID">
+            <input type="text" id="file-path" placeholder="File Path">
+            <button onclick="addFile()">Add File</button>
+        </div>
+
+        <div class="section">
+            <h3>View Subjects</h3>
+            <button onclick="getSubjects()">Get My Subjects</button>
+        </div>
+
+        <div class="section">
+            <h3>View Subject Files</h3>
+            <input type="number" id="view-subject-id" placeholder="Subject ID">
+            <button onclick="getSubjectFiles()">Get Files</button>
+        </div>
+        <div class="section">
+            <h3>Delete Subject</h3>
+            <input type="number" id="delete-subject-id" placeholder="Subject ID">
+            <button onclick="deleteSubject()">Delete Subject</button>
+        </div>
+        
+        <div class="section">
+            <h3>Delete File from Subject</h3>
+            <input type="number" id="delete-file-id" placeholder="File ID">
+            <button onclick="deleteFile()">Delete File</button>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+        <div id="response" class="response"></div>
+    </div>
+
+    <script>
+        function showResponse(data) {
+            document.getElementById('response').innerHTML = JSON.stringify(data, null, 2);
+        }
+
+        async function createSubject() {
+            const name = document.getElementById('subject-name').value;
+            try {
+                const response = await fetch('/professor/subjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                const data = await response.json();
+                showResponse(data);
+            } catch (error) {
+                showResponse({ error: error.message });
+            }
+        }
+
+        async function addFile() {
+            const subjectId = document.getElementById('subject-id').value;
+            const filepath = document.getElementById('file-path').value;
+            try {
+                const response = await fetch(`/professor/subjects/${subjectId}/files`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filepath })
+                });
+                const data = await response.json();
+                showResponse(data);
+            } catch (error) {
+                showResponse({ error: error.message });
+            }
+        }
+
+        async function getSubjects() {
+            try {
+                const response = await fetch('/professor/subjects');
+                const data = await response.json();
+                showResponse(data);
+            } catch (error) {
+                showResponse({ error: error.message });
+            }
+        }
+
+        async function getSubjectFiles() {
+            const subjectId = document.getElementById('view-subject-id').value;
+            try {
+                const response = await fetch(`/professor/subjects/${subjectId}/files`);
+                const data = await response.json();
+                showResponse(data);
+            } catch (error) {
+                showResponse({ error: error.message });
+            }
+        }
+    </script>
+    <!-- Add these inside the container div -->
+
+
+<!-- Add these JavaScript functions -->
+<script>
+    // Add these functions in the existing script tag
+    async function deleteSubject() {
+        const subjectId = document.getElementById('delete-subject-id').value;
+        try {
+            const response = await fetch(`/professor/subjects/${subjectId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+
+    async function deleteFile() {
+        const fileId = document.getElementById('delete-file-id').value;
+        try {
+            const response = await fetch(`/professor/subjects/files/${fileId}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+</script>
+</body>
+</html>
