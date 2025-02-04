@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Course Q&A System - Login</title>
+    <title>Course Q&A System - Professor Registration</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -10,7 +10,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 400px;
+            max-width: 500px;
             margin: 50px auto;
             background: white;
             padding: 30px;
@@ -29,12 +29,16 @@
             margin-bottom: 5px;
             color: #333;
         }
-        input {
+        input, textarea {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
         }
         button {
             width: 100%;
@@ -53,74 +57,99 @@
             margin-top: 10px;
             text-align: center;
         }
-        .register-link {
+        .login-link {
             text-align: center;
             margin-top: 20px;
         }
-        .register-link a {
+        .login-link a {
             color: #2196f3;
             text-decoration: none;
         }
-        .register-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
+        }
+        .info-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2>Course Q&A System</h2>
-            <p>Sign in to your account</p>
+            <h2>Professor Registration</h2>
+            <p>Register for a professor account</p>
         </div>
         
-        <form id="loginForm">
+        <form id="registerForm">
             <div class="form-group">
-                <label for="username">Email</label>
+                <label for="username">Institutional Email</label>
                 <input type="email" id="username" name="username" required>
+                <div class="info-text">Please use your institutional email address</div>
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
+                <div class="info-text">Minimum 8 characters, include numbers and special characters</div>
             </div>
             
-            <button type="submit">Sign In</button>
+            <div class="form-group">
+                <label for="institution">Institution</label>
+                <input type="text" id="institution" name="institution" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="department">Department</label>
+                <input type="text" id="department" name="department" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="reason">Reason for Registration</label>
+                <textarea id="reason" name="reason" required></textarea>
+            </div>
+            
+            <button type="submit">Register</button>
             
             <div id="error" class="error"></div>
         </form>
         
-        <div class="register-link">
-            <p>Don't have an account? <a href="/register">Register as Professor</a></p>
+        <div class="login-link">
+            <p>Already have an account? <a href="/">Sign In</a></p>
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                institution: document.getElementById('institution').value,
+                department: document.getElementById('department').value,
+                reason: document.getElementById('reason').value,
+                role: 'professor'
+            };
             
             try {
-                const response = await fetch('/auth/login', {
+                const response = await fetch('/auth/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify(formData)
                 });
                 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    if (data.user.role === 'professor') {
-                        window.location.href = '/professor-test';
-                    } else {
-                        window.location.href = '/chat';
-                    }
-                } else {
-                    document.getElementById('error').textContent = data.error || 'Login failed';
-                }
+    alert('Thank you for your interest! Your registration has been submitted for review. You will receive an approval email once your account is verified.');
+    window.location.href = '/';
+} else {
+    document.getElementById('error').textContent = data.error || 'Registration failed';
+}
             } catch (error) {
                 document.getElementById('error').textContent = 'An error occurred. Please try again.';
             }

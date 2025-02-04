@@ -5,7 +5,7 @@ Endpoints: /auth/login, /auth/logout, /auth/users
 
 from flask import Blueprint, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, current_user
-from src.models import User, get_db
+from src.models import User, get_db, ProfessorProfile
 from contextlib import closing
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -34,6 +34,11 @@ def login():
         if not user or not user.check_password(data['password']):
             return jsonify({"error": "Invalid credentials"}), 401
         
+        # Check if professor is approved
+        if user.role == 'professor':
+            if not (user.professor_profile and user.professor_profile.is_approved):
+                return jsonify({"error": "Your account is pending approval. Please wait for approval email."}), 403
+        
         login_user(user)
         return jsonify({
             "message": "Login successful",
@@ -55,9 +60,9 @@ def logout():
 
 @auth_bp.route('/users', methods=['POST'])
 def create_user():
-    """Create new user account with validation"""
+    """Create new professor account with validation"""
     data = request.get_json()
-    required_fields = ['username', 'password']
+    required_fields = ['username', 'password', 'institution', 'department', 'reason']
     if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
     
@@ -69,14 +74,24 @@ def create_user():
         try:
             new_user = User(
                 username=data['username'],
-                role=data.get('role', 'student').lower()
+                role='professor'  # Since this is professor registration
             )
             new_user.set_password(data['password'])
             session.add(new_user)
+            
+            # Create professor profile
+            profile = ProfessorProfile(
+                institution=data['institution'],
+                department=data['department'],
+                registration_reason=data['reason'],
+                is_approved=False
+            )
+            new_user.professor_profile = profile
+            
             session.commit()
             return jsonify({
-                "message": "User created successfully",
-                "user_id": new_user.id
+                "message": "Registration interest submitted successfully. Please wait for approval via email.",
+                "status": "pending"
             }), 201
         except ValueError as e:
             session.rollback()

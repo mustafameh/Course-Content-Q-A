@@ -4,17 +4,35 @@ from src.models import User, Subject, SubjectFile, get_db
 from werkzeug.utils import secure_filename
 import os
 from functools import wraps
+from sqlalchemy.orm import joinedload
 
 professor_bp = Blueprint('professor', __name__, url_prefix='/professor')
 
-# Custom decorator to check if user is a professor
+# Custom decorator to check if user is a professor and approved
 def professor_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != 'professor':
             return jsonify({"error": "Professor access required"}), 403
-        return f(*args, **kwargs)
+        
+        # Get fresh user object from database with relationships
+        db = next(get_db())
+        try:
+            user = db.query(User).options(
+                joinedload(User.professor_profile)
+            ).get(current_user.id)
+            
+            if not (user.professor_profile and user.professor_profile.is_approved):
+                return jsonify({"error": "Your professor account is pending approval"}), 403
+                
+            return f(*args, **kwargs)
+        finally:
+            db.close()
+            
     return decorated_function
+
+
+
 
 @professor_bp.route('/subjects', methods=['POST'])
 @login_required

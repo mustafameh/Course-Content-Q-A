@@ -3,11 +3,12 @@ Database models and session management
 Core tables: Users, Subjects, SubjectFiles, SubjectEnrollment
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Table, Boolean, DateTime
 from sqlalchemy.orm import declarative_base, relationship, scoped_session, sessionmaker
 from passlib.hash import bcrypt
 from sqlalchemy.orm import validates
 from flask_login import UserMixin  # Added UserMixin
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -28,6 +29,7 @@ class User(Base, UserMixin):  # Added UserMixin
     # Relationships
     created_subjects = relationship('Subject', back_populates='professor')
     enrolled_subjects = relationship('Subject', secondary=subject_enrollment, back_populates='students')
+    professor_profile = relationship('ProfessorProfile', back_populates='user', uselist=False)
 
     def set_password(self, password):
         self.password_hash = bcrypt.hash(password)
@@ -52,7 +54,24 @@ class User(Base, UserMixin):  # Added UserMixin
         if '@' not in username:
             raise ValueError("Username must be a valid email address")
         return username
-
+    
+    
+    
+    
+class ProfessorProfile(Base):
+    __tablename__ = 'professor_profiles'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    institution = Column(String(100))
+    department = Column(String(100))
+    registration_reason = Column(String(500))
+    is_approved = Column(Boolean, default=False)
+    registration_date = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = relationship('User', back_populates='professor_profile')
+    
+    
 class Subject(Base):
     """Course subject model"""
     __tablename__ = 'subjects'
