@@ -1,188 +1,419 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Professor Functions Test</title>
+    <title>Professor Dashboard</title>
     <style>
-        .container { max-width: 800px; margin: 50px auto; padding: 20px; }
-        .section { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
-        .response { margin-top: 10px; padding: 10px; background: #f5f5f5; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .profile-section {
+            margin-bottom: 30px;
+        }
+        .profile-info {
+            margin-top: 20px;
+        }
+        .profile-info p {
+            margin: 10px 0;
+            color: #ecf0f1;
+        }
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .create-subject-btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .subject-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .subject-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .file-list {
+            margin: 10px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .file-path {
+            flex-grow: 1;
+            margin-right: 10px;
+            word-break: break-all;
+        }
+        .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { 
+            background-color: #3498db; 
+            color: white; 
+        }
+        .btn-danger { 
+            background-color: #e74c3c; 
+            color: white; 
+        }
+        .btn-success { 
+            background-color: #2ecc71; 
+            color: white; 
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 50%;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="section">
-            <h3>Create Subject</h3>
-            <input type="text" id="subject-name" placeholder="Subject Name">
-            <button onclick="createSubject()">Create Subject</button>
+    <div class="dashboard">
+        <div class="sidebar">
+            <div class="profile-section">
+                <h2>Professor Dashboard</h2>
+                <div class="profile-info">
+                    <p id="professor-email">Loading...</p>
+                    <p id="professor-institution">Loading...</p>
+                    <p id="professor-department">Loading...</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="logout-btn">Logout</button>
         </div>
 
-        <div class="section">
-            <h3>Add File to Subject</h3>
-            <input type="number" id="subject-id" placeholder="Subject ID">
-            <input type="text" id="file-path" placeholder="File Path">
-            <button onclick="addFile()">Add File</button>
+        <div class="main-content">
+            <button onclick="showCreateSubjectModal()" class="create-subject-btn">Create New Subject</button>
+            <div id="subjects-container">
+                <!-- Subject sections will be dynamically added here -->
+            </div>
         </div>
+    </div>
 
-        <div class="section">
-            <h3>View Subjects</h3>
-            <button onclick="getSubjects()">Get My Subjects</button>
+    <!-- Create Subject Modal -->
+    <div id="create-subject-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('create-subject-modal')">&times;</span>
+            <h2>Create New Subject</h2>
+            <input type="text" id="new-subject-name" class="input-field" placeholder="Subject Name">
+            <button onclick="createSubject()" class="btn btn-primary">Create</button>
         </div>
+    </div>
 
-        <div class="section">
-            <h3>View Subject Files</h3>
-            <input type="number" id="view-subject-id" placeholder="Subject ID">
-            <button onclick="getSubjectFiles()">Get Files</button>
+    <!-- Add File Modal -->
+    <div id="add-file-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('add-file-modal')">&times;</span>
+            <h2>Add File Path</h2>
+            <input type="text" id="new-file-path" class="input-field" placeholder="File Path">
+            <button onclick="addFilePath()" class="btn btn-primary">Add</button>
         </div>
-        <div class="section">
-            <h3>Delete Subject</h3>
-            <input type="number" id="delete-subject-id" placeholder="Subject ID">
-            <button onclick="deleteSubject()">Delete Subject</button>
-        </div>
-        
-        <div class="section">
-            <h3>Delete File from Subject</h3>
-            <input type="number" id="delete-file-id" placeholder="File ID">
-            <button onclick="deleteFile()">Delete File</button>
-        </div>
-        <!-- Add this new section -->
-        <div class="section">
-            <h3>Knowledge Base Management</h3>
-            <input type="number" id="kb-subject-id" placeholder="Subject ID">
-            <button onclick="checkKnowledgeBase()">Check Status</button>
-            <button onclick="createKnowledgeBase()">Create/Update Knowledge Base</button>
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <div id="response" class="response"></div>
     </div>
 
     <script>
-        function showResponse(data) {
-            document.getElementById('response').innerHTML = JSON.stringify(data, null, 2);
+        let currentSubjectId = null;
+
+        // Load initial data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfessorProfile();
+            loadSubjects();
+        });
+
+        async function loadProfessorProfile() {
+            try {
+                const response = await fetch('/professor/profile');
+                if (!response.ok) throw new Error('Failed to load profile');
+                
+                const data = await response.json();
+                document.getElementById('professor-email').textContent = `Email: ${data.email}`;
+                document.getElementById('professor-institution').textContent = `Institution: ${data.institution}`;
+                document.getElementById('professor-department').textContent = `Department: ${data.department}`;
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                document.getElementById('professor-email').textContent = 'Error loading profile';
+                document.getElementById('professor-institution').textContent = '';
+                document.getElementById('professor-department').textContent = '';
+            }
+        }
+
+        async function loadSubjects() {
+            try {
+                const response = await fetch('/professor/subjects');
+                if (!response.ok) throw new Error('Failed to load subjects');
+                
+                const data = await response.json();
+                const container = document.getElementById('subjects-container');
+                container.innerHTML = ''; // Clear existing content
+                
+                data.subjects.forEach(subject => {
+                    const section = createSubjectSection(subject);
+                    container.appendChild(section);
+                    loadSubjectFiles(subject.id);
+                });
+            } catch (error) {
+                console.error('Error loading subjects:', error);
+                alert('Failed to load subjects');
+            }
+        }
+
+        function createSubjectSection(subject) {
+            const section = document.createElement('div');
+            section.className = 'subject-section';
+            section.innerHTML = `
+                <div class="subject-header">${subject.name}</div>
+                <div class="file-list" id="files-${subject.id}">
+                    <!-- Files will be loaded here -->
+                </div>
+                <div class="action-buttons">
+                    <button onclick="showAddFileModal(${subject.id})" class="btn btn-primary">Add File Path</button>
+                    <button onclick="updateKnowledgeBase(${subject.id})" class="btn btn-success" id="kb-btn-${subject.id}">
+                        Create/Update Knowledge Base
+                    </button>
+                </div>
+            `;
+            return section;
+        }
+
+        async function loadSubjectFiles(subjectId) {
+            try {
+                const response = await fetch(`/professor/subjects/${subjectId}/files`);
+                if (!response.ok) throw new Error('Failed to load files');
+                
+                const data = await response.json();
+                const filesList = document.getElementById(`files-${subjectId}`);
+                filesList.innerHTML = ''; // Clear existing files
+                
+                data.files.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <span class="file-path">${file.path}</span>
+                        <button onclick="deleteFile(${file.id}, ${subjectId})" class="btn btn-danger">Remove</button>
+                    `;
+                    filesList.appendChild(fileItem);
+                });
+
+                // Enable/disable KB button based on file count
+                const kbButton = document.getElementById(`kb-btn-${subjectId}`);
+                kbButton.disabled = data.files.length === 0;
+                if (data.files.length === 0) {
+                    kbButton.classList.add('disabled');
+                } else {
+                    kbButton.classList.remove('disabled');
+                }
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        function showCreateSubjectModal() {
+            document.getElementById('create-subject-modal').style.display = 'block';
+        }
+
+        function showAddFileModal(subjectId) {
+            currentSubjectId = subjectId;
+            document.getElementById('add-file-modal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'create-subject-modal') {
+                document.getElementById('new-subject-name').value = '';
+            } else if (modalId === 'add-file-modal') {
+                document.getElementById('new-file-path').value = '';
+                currentSubjectId = null;
+            }
         }
 
         async function createSubject() {
-            const name = document.getElementById('subject-name').value;
+            const name = document.getElementById('new-subject-name').value.trim();
+            if (!name) {
+                alert('Please enter a subject name');
+                return;
+            }
+
             try {
                 const response = await fetch('/professor/subjects', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name })
                 });
-                const data = await response.json();
-                showResponse(data);
+
+                if (!response.ok) throw new Error('Failed to create subject');
+                
+                closeModal('create-subject-modal');
+                loadSubjects();
             } catch (error) {
-                showResponse({ error: error.message });
+                console.error('Error creating subject:', error);
+                alert('Failed to create subject');
             }
         }
 
-        async function addFile() {
-            const subjectId = document.getElementById('subject-id').value;
-            const filepath = document.getElementById('file-path').value;
+        async function addFilePath() {
+            if (!currentSubjectId) return;
+            
+            const filepath = document.getElementById('new-file-path').value.trim();
+            if (!filepath) {
+                alert('Please enter a file path');
+                return;
+            }
+
             try {
-                const response = await fetch(`/professor/subjects/${subjectId}/files`, {
+                const response = await fetch(`/professor/subjects/${currentSubjectId}/files`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ filepath })
                 });
-                const data = await response.json();
-                showResponse(data);
+
+                if (!response.ok) throw new Error('Failed to add file');
+                
+                closeModal('add-file-modal');
+                loadSubjectFiles(currentSubjectId);
             } catch (error) {
-                showResponse({ error: error.message });
+                console.error('Error adding file:', error);
+                alert('Failed to add file');
             }
         }
 
-        async function getSubjects() {
+        async function deleteFile(fileId, subjectId) {
+            if (!confirm('Are you sure you want to remove this file path?')) return;
+
             try {
-                const response = await fetch('/professor/subjects');
-                const data = await response.json();
-                showResponse(data);
+                const response = await fetch(`/professor/subjects/files/${fileId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete file');
+                
+                loadSubjectFiles(subjectId);
             } catch (error) {
-                showResponse({ error: error.message });
+                console.error('Error deleting file:', error);
+                alert('Failed to delete file');
             }
         }
 
-        async function getSubjectFiles() {
-            const subjectId = document.getElementById('view-subject-id').value;
+        async function updateKnowledgeBase(subjectId) {
+            if (!confirm('Are you sure you want to create/update the knowledge base? This may take a while.')) return;
+
             try {
-                const response = await fetch(`/professor/subjects/${subjectId}/files`);
-                const data = await response.json();
-                showResponse(data);
+                const response = await fetch(`/professor/subjects/${subjectId}/knowledge-base`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error('Failed to update knowledge base');
+                
+                alert('Knowledge base updated successfully');
             } catch (error) {
-                showResponse({ error: error.message });
+                console.error('Error updating knowledge base:', error);
+                alert('Failed to update knowledge base');
             }
         }
-    
-    <!-- Add these inside the container div -->
 
-
-
-
-    // Add these functions in the existing script tag
-    async function deleteSubject() {
-        const subjectId = document.getElementById('delete-subject-id').value;
-        try {
-            const response = await fetch(`/professor/subjects/${subjectId}`, {
-                method: 'DELETE'
-            });
-            const data = await response.json();
-            showResponse(data);
-        } catch (error) {
-            showResponse({ error: error.message });
+        async function logout() {
+            try {
+                const response = await fetch('/auth/logout', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    alert('Logout failed');
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                alert('Logout failed');
+            }
         }
-    }
 
-    async function deleteFile() {
-        const fileId = document.getElementById('delete-file-id').value;
-        try {
-            const response = await fetch(`/professor/subjects/files/${fileId}`, {
-                method: 'DELETE'
-            });
-            const data = await response.json();
-            showResponse(data);
-        } catch (error) {
-            showResponse({ error: error.message });
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
         }
-    }
-        async function checkKnowledgeBase() {
-        const subjectId = document.getElementById('kb-subject-id').value;
-        try {
-            const response = await fetch(`/professor/subjects/${subjectId}/knowledge-base`);
-            const data = await response.json();
-            showResponse(data);
-        } catch (error) {
-            showResponse({ error: error.message });
-        }
-    }
-
-    async function createKnowledgeBase() {
-        const subjectId = document.getElementById('kb-subject-id').value;
-        try {
-            const response = await fetch(`/professor/subjects/${subjectId}/knowledge-base`, {
-                method: 'POST'
-            });
-            const data = await response.json();
-            showResponse(data);
-        } catch (error) {
-            showResponse({ error: error.message });
-        }
-    }
-    
-</script>
+    </script>
 </body>
 </html>

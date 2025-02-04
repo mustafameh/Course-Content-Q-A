@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 from functools import wraps
 from sqlalchemy.orm import joinedload
-
+from datetime import datetime
 professor_bp = Blueprint('professor', __name__, url_prefix='/professor')
 
 # Custom decorator to check if user is a professor and approved
@@ -285,3 +285,67 @@ def check_knowledge_base_status(subject_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+@professor_bp.route('/subjects/<int:subject_id>/status', methods=['GET'])
+@login_required
+@professor_required
+def get_subject_status(subject_id):
+    """Get detailed status of a subject including KB info"""
+    db = next(get_db())
+    try:
+        subject = db.query(Subject).filter_by(
+            id=subject_id, 
+            professor_id=current_user.id
+        ).first()
+        
+        if not subject:
+            return jsonify({"error": "Subject not found"}), 404
+
+        # Check knowledge base status
+        vector_store = VectorStore()
+        kb_exists = vector_store.load_subject_vector_store(
+            professor_id=current_user.id,
+            subject_id=subject_id
+        ) is not None
+
+        # Get KB path to check last modified time
+        kb_path = vector_store._get_vector_store_path(
+            professor_id=current_user.id,
+            subject_id=subject_id
+        )
+        
+        last_updated = None
+        if os.path.exists(kb_path):
+            last_updated = datetime.fromtimestamp(os.path.getmtime(kb_path)).strftime('%Y-%m-%d %H:%M:%S')
+
+        return jsonify({
+            "id": subject.id,
+            "name": subject.name,
+            "file_count": len(subject.files),
+            "kb_exists": kb_exists,
+            "last_updated": last_updated
+        })
+
+    finally:
+        db.close()
+        
+
+@professor_bp.route('/profile', methods=['GET'])
+@login_required
+@professor_required
+def get_professor_profile():
+    """Get professor profile information"""
+    db = next(get_db())
+    try:
+        user = db.query(User).options(
+            joinedload(User.professor_profile)
+        ).get(current_user.id)
+        
+        return jsonify({
+            "email": user.username,
+            "institution": user.professor_profile.institution,
+            "department": user.professor_profile.department
+        })
+    finally:
+        db.close()
