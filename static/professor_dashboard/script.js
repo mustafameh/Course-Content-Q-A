@@ -199,14 +199,21 @@ async function loadSubjects() {
 function createSubjectSection(subject) {
     const section = document.createElement('div');
     section.className = 'subject-section drive-subject-section';
+    section.setAttribute('data-subject-id', subject.id);  // Add this line
 
     const headerContent = `
         <div class="subject-header">
-            ${subject.name}
+            <div class="subject-title">
+                <h3>${subject.name}</h3>
+                <button onclick="showEditSubject(${subject.id})" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </div>
+            <div class="subject-description">
+                ${subject.description || 'No description'}
+            </div>
             <div class="folder-info">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                     alt="Google Drive" class="google-icon">
-                Drive Folder Connected
+                <i class="fab fa-google-drive"></i> Drive Folder Connected
             </div>
         </div>
     `;
@@ -288,6 +295,82 @@ function createSubjectSection(subject) {
     return section;
 }
 
+function showEditSubject(subjectId) {
+    const subjectSection = document.querySelector(`[data-subject-id="${subjectId}"]`);
+    const currentName = subjectSection.querySelector('.subject-title h3').textContent;
+    const descriptionElement = subjectSection.querySelector('.subject-description');
+    const currentDescription = descriptionElement ? 
+        descriptionElement.textContent.trim() === 'No description' ? '' : descriptionElement.textContent : '';
+
+    // Create edit modal
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'edit-subject-modal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Subject</h2>
+                <span class="close" onclick="closeModal('edit-subject-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-subject-name">Subject Name</label>
+                    <input type="text" id="edit-subject-name" class="input-field" 
+                           value="${currentName}" placeholder="Enter subject name">
+                </div>
+                <div class="form-group">
+                    <label for="edit-subject-description">Description</label>
+                    <textarea id="edit-subject-description" class="input-field" 
+                            placeholder="Enter subject description">${currentDescription}</textarea>
+                </div>
+                <div id="edit-subject-error" class="error-text" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="updateSubject(${subjectId})" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.style.display = 'block';
+}
+async function updateSubject(subjectId) {
+    const nameInput = document.getElementById('edit-subject-name');
+    const descriptionInput = document.getElementById('edit-subject-description');
+    const errorElement = document.getElementById('edit-subject-error');
+    
+    const name = nameInput.value.trim();
+    const description = descriptionInput.value.trim();
+    
+    if (!name) {
+        errorElement.textContent = 'Subject name is required';
+        errorElement.style.display = 'block';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/professor/drive/subjects/${subjectId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to update subject');
+        }
+        
+        closeModal('edit-subject-modal');
+        loadSubjects();  // Refresh the subjects list
+        
+    } catch (error) {
+        errorElement.textContent = error.message;
+        errorElement.style.display = 'block';
+    }
+}
 // File Management
 
 async function loadDriveFiles(subjectId) {

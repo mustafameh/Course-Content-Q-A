@@ -83,8 +83,10 @@ class Subject(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
+    description = Column(String(500), nullable=True)  # Add this line
     professor_id = Column(Integer, ForeignKey('users.id'))
     drive_folder_id = Column(String(100))
+    
     drive_folder_created = Column(DateTime)
 
     # Relationships

@@ -786,3 +786,67 @@ def sync_drive_files(subject_id):
         return jsonify({"error": "Failed to sync files"}), 500
     finally:
         db.close()
+        
+@professor_bp.route('/drive/subjects/<int:subject_id>', methods=['PUT'])
+@login_required
+@professor_required
+def update_drive_subject(subject_id):
+    """Update subject name and description"""
+    data = request.get_json()
+    if not data or ('name' not in data and 'description' not in data):
+        return jsonify({"error": "Name or description required"}), 400
+
+    db = next(get_db())
+    try:
+        # Get subject and verify ownership
+        subject = db.query(Subject).filter_by(
+            id=subject_id,
+            professor_id=current_user.id
+        ).first()
+
+        if not subject:
+            return jsonify({"error": "Subject not found"}), 404
+
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+
+        # Update Drive folder name if name is being changed
+        if 'name' in data and data['name'] != subject.name:
+            try:
+                drive_service.update_folder_name(subject.drive_folder_id, data['name'])
+                subject.name = data['name']
+            except Exception as e:
+                return jsonify({"error": f"Failed to update Drive folder: {str(e)}"}), 500
+
+        # Update description if provided
+        if 'description' in data:
+            subject.description = data['description']
+
+        db.commit()
+
+        return jsonify({
+            "message": "Subject updated successfully",
+            "subject": {
+                "id": subject.id,
+                "name": subject.name,
+                "description": subject.description,
+                "drive_folder_id": subject.drive_folder_id
+            }
+        })
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": f"Failed to update subject: {str(e)}"}), 500
+    finally:
+        db.close()

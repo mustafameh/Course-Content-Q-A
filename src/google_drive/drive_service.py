@@ -391,3 +391,21 @@ class GoogleDriveService:
             print(f'Error creating root folder: {error}')
             return None
         
+    def update_folder_name(self, folder_id: str, new_name: str) -> bool:
+        """Update folder name in Drive"""
+        try:
+            file_metadata = {'name': new_name}
+            
+            self.service.files().update(
+                fileId=folder_id,
+                body=file_metadata,
+                fields='id, name',
+                supportsAllDrives=True
+            ).execute()
+            
+            return True
+            
+        except HttpError as error:
+            print(f'Error updating folder name: {error}')
+            raise
+            

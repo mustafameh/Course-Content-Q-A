@@ -635,3 +635,25 @@ body {
     padding-top: 20px;
     border-top: 1px solid #eee;
 }
+
+.subject-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subject-description {
+    margin: 10px 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+textarea.input-field {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
