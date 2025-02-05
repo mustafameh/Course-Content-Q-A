@@ -18,30 +18,18 @@
                 </div>
             </div>
 
+            <!-- Replace the Google Drive section in the sidebar -->
             <div class="google-drive-section">
                 <h3>Google Drive Connection</h3>
                 <div class="connection-status">
-                    <div id="drive-status-indicator" class="status-indicator status-disconnected"></div>
-                    <span id="drive-status-text">Disconnected</span>
+                    <div id="drive-status-indicator" class="status-indicator"></div>
+                    <span id="drive-status-text">Checking connection...</span>
                 </div>
                 
                 <div id="drive-connect-btn-container">
                     <button onclick="connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
-                        <i class="fab fa-google"></i>
-                        Connect Drive
+                        <i class="fab fa-google"></i> Connect Drive
                     </button>
-                </div>
-                
-                <div id="drive-info" class="sync-info" style="display: none">
-                    <p id="last-synced">Last synced: Never</p>
-                    <div class="drive-actions">
-                        <button onclick="refreshDriveConnection()" class="btn btn-primary">
-                            <i class="fas fa-sync"></i> Refresh
-                        </button>
-                        <button onclick="disconnectDrive()" class="btn btn-danger">
-                            <i class="fas fa-unlink"></i> Disconnect
-                        </button>
-                    </div>
                 </div>
             </div>
 

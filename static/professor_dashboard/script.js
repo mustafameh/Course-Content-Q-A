@@ -145,28 +145,8 @@ function startConnectionCheck() {
     }, 2000);
 }
 
-async function refreshDriveConnection() {
-    await loadGoogleDriveStatus();
-}
 
-async function disconnectDrive() {
-    if (!confirm('Are you sure you want to disconnect Google Drive?')) return;
-    
-    try {
-        const response = await fetch('/professor/google/disconnect', {
-            method: 'POST'
-        });
-        
-        if (response.ok) {
-            loadGoogleDriveStatus();
-        } else {
-            throw new Error('Failed to disconnect');
-        }
-    } catch (error) {
-        console.error('Error disconnecting Drive:', error);
-        alert('Failed to disconnect Google Drive');
-    }
-}
+
 
 async function loadSubjects() {
     try {
@@ -949,42 +929,33 @@ async function loadGoogleDriveStatus() {
     try {
         const response = await fetch('/professor/google/status');
         const data = await response.json();
-        
-        // Update state
         state.isDriveConnected = data.connected;
-        
-        // Update UI
-        updateDriveStatus(data.connected, data.last_synced);
+        updateDriveStatus(data.connected);
         updateDriveUI();
-        
-        console.log('Drive status updated:', data);  // Add this for debugging
     } catch (error) {
         console.error('Error loading Drive status:', error);
         updateDriveStatus(false);
     }
 }
 
-function updateDriveStatus(connected, lastSynced = null) {
+function updateDriveStatus(connected) {
     const statusIndicator = document.getElementById('drive-status-indicator');
     const statusText = document.getElementById('drive-status-text');
-    const driveInfo = document.getElementById('drive-info');
     const connectBtn = document.getElementById('connect-drive-btn');
     const statusElement = document.getElementById('drive-connection-status');
 
     if (connected) {
         statusIndicator.className = 'status-indicator status-connected';
         statusText.textContent = 'Connected';
-        driveInfo.style.display = 'block';
         connectBtn.style.display = 'none';
         statusElement.className = 'drive-status connected';
-        statusElement.textContent = `Drive: Connected${lastSynced ? ` (Last synced: ${new Date(lastSynced).toLocaleString()})` : ''}`;
+        statusElement.textContent = 'Drive: Connected';
     } else {
         statusIndicator.className = 'status-indicator status-disconnected';
-        statusText.textContent = 'Disconnected';
-        driveInfo.style.display = 'none';
+        statusText.textContent = 'Not Connected';
         connectBtn.style.display = 'block';
         statusElement.className = 'drive-status disconnected';
-        statusElement.textContent = 'Drive: Disconnected';
+        statusElement.textContent = 'Drive: Not Connected';
     }
 }
 
