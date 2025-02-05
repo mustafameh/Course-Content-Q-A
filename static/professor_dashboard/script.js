@@ -315,8 +315,8 @@ function createSubjectSection(subject, isDrive) {
     
     section.innerHTML = `
         ${headerContent}
-        ${uploadZone}
         ${fileListSection}
+        ${uploadZone}
         ${actionsContent}
     `;
     

@@ -221,7 +221,6 @@ def delete_subject_file(file_id):
 from src.vector_store import VectorStore
 from src.document_loader import SubjectDocumentLoader
 
-# Add these new endpoints
 @professor_bp.route('/subjects/<int:subject_id>/knowledge-base', methods=['POST'])
 @login_required
 @professor_required
@@ -234,19 +233,16 @@ def create_subject_knowledge_base(subject_id):
             id=subject_id,
             professor_id=current_user.id
         ).first()
-        
+
         if not subject:
             return jsonify({"error": "Subject not found or unauthorized"}), 404
 
-        # Get all file paths for the subject
-        file_paths = [file.path for file in subject.files]
-        
-        if not file_paths:
-            return jsonify({"error": "No files found for this subject"}), 400
-
         # Load documents
         document_loader = SubjectDocumentLoader()
-        documents = document_loader.load_subject_documents(file_paths)
+        documents = document_loader.load_subject_documents(
+            subject_id=subject_id,
+            professor_id=current_user.id
+        )
         
         if not documents:
             return jsonify({"error": "No documents could be loaded"}), 400
@@ -265,6 +261,7 @@ def create_subject_knowledge_base(subject_id):
         })
 
     except Exception as e:
+        print(f"Error creating knowledge base: {str(e)}")
         return jsonify({"error": f"Failed to create knowledge base: {str(e)}"}), 500
     finally:
         db.close()
@@ -575,19 +572,18 @@ def get_drive_subjects():
     finally:
         db.close()
 
-# Add route to delete Drive subject
 @professor_bp.route('/drive/subjects/<int:subject_id>', methods=['DELETE'])
 @login_required
 @professor_required
 def delete_drive_subject(subject_id):
-    """Delete subject and its Drive folder"""
+    """Delete subject , knowledge base and its Drive folder"""
     db = next(get_db())
     try:
         subject = db.query(Subject).filter_by(
             id=subject_id,
             professor_id=current_user.id
         ).first()
-        
+
         if not subject:
             return jsonify({"error": "Subject not found"}), 404
             
@@ -604,11 +600,25 @@ def delete_drive_subject(subject_id):
                 credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
                 drive_service = GoogleDriveService(credentials)
                 
-                if not drive_service.delete_folder(subject.drive_folder_id):
-                    return jsonify({
-                        "error": "Failed to delete Drive folder"
-                    }), 500
-        
+                try:
+                    drive_service.delete_folder(subject.drive_folder_id)
+                except Exception as e:
+                    print(f"Error deleting Drive folder: {str(e)}")
+                    # Continue with deletion even if Drive folder deletion fails
+            
+            # Delete vector store if it exists
+            vector_store = VectorStore()
+            vector_store_path = vector_store._get_vector_store_path(
+                professor_id=current_user.id,
+                subject_id=subject_id
+            )
+            if os.path.exists(vector_store_path):
+                try:
+                    import shutil
+                    shutil.rmtree(vector_store_path)
+                except Exception as e:
+                    print(f"Error deleting vector store: {str(e)}")
+    
         # Delete subject from database
         db.delete(subject)
         db.commit()
@@ -617,7 +627,8 @@ def delete_drive_subject(subject_id):
         
     except Exception as e:
         db.rollback()
-        return jsonify({"error": str(e)}), 500
+        print(f"Error in delete_drive_subject: {str(e)}")
+        return jsonify({"error": "Failed to delete subject"}), 500
     finally:
         db.close()
         

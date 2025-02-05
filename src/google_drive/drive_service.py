@@ -8,6 +8,7 @@ import io
 import json
 import mimetypes
 from typing import Tuple, List, Dict, Any, Optional
+from googleapiclient.http import MediaIoBaseDownload
 
 class GoogleDriveService:
     """Service class for Google Drive operations"""
@@ -81,6 +82,39 @@ class GoogleDriveService:
             
         except HttpError as error:
             print(f'Error uploading file: {error}')
+            raise
+        
+    def delete_folder(self, folder_id: str) -> bool:
+        """
+        Delete a folder and all its contents from Drive
+        
+        Args:
+            folder_id: Drive folder ID
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            # First, recursively delete all contents
+            files = self.list_folder_files(folder_id)[0]  # Get first element of tuple (files list)
+            
+            # Delete all files in the folder
+            for file in files:
+                try:
+                    self.delete_file(file['id'])
+                except Exception as e:
+                    print(f"Error deleting file {file['name']}: {str(e)}")
+            
+            # Finally delete the folder itself
+            self.service.files().delete(
+                fileId=folder_id,
+                supportsAllDrives=True
+            ).execute()
+            
+            return True
+            
+        except HttpError as error:
+            print(f'Error deleting folder: {error}')
             raise
 
     def list_folder_files(
@@ -297,6 +331,20 @@ class GoogleDriveService:
             return True
         except HttpError:
             return False
+        
+    def download_file(self, file_id: str, destination_path: str):
+        """Download a file from Drive to local path"""
+        try:
+            request = self.service.files().get_media(fileId=file_id)
+            with open(destination_path, 'wb') as f:
+                downloader = MediaIoBaseDownload(f, request)
+                done = False
+                while done is False:
+                    status, done = downloader.next_chunk()
+                    
+        except HttpError as error:
+            print(f'Error downloading file: {error}')
+            raise
 
     def update_file_metadata(self, file_id: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -322,3 +370,5 @@ class GoogleDriveService:
         except HttpError as error:
             print(f'Error updating file metadata: {error}')
             raise
+        
+        
