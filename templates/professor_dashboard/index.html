@@ -41,11 +41,16 @@
         <div class="main-content">
             <div class="drive-header">
                 <button onclick="showCreateSubjectModal()" class="create-subject-btn">
-                    <i class="fas fa-plus"></i> Create New Subject
+                    <div class="btn-content">
+                        <div class="btn-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="btn-text">
+                            <span class="primary-text">Create New Subject</span>
+                            <span class="secondary-text">Add a new course to your dashboard</span>
+                        </div>
+                    </div>
                 </button>
-                <div id="drive-connection-status" class="drive-status disconnected">
-                    Drive: Disconnected
-                </div>
             </div>
 
             <div id="subjects-container">

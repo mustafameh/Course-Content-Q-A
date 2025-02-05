@@ -657,3 +657,140 @@ textarea.input-field {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
 }
+
+.drive-header {
+    margin-bottom: 2rem;
+    padding: 1rem;
+}
+
+.create-subject-btn {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    width: 100%;
+    max-width: 400px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.create-subject-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #1E88E5, #1565C0);
+}
+
+.create-subject-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    color: white;
+    text-align: left;
+}
+
+.btn-icon {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btn-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.btn-text .primary-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-text .secondary-text {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Add animation for the plus icon */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.create-subject-btn:hover .btn-icon i {
+    animation: pulse 1s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .create-subject-btn {
+        max-width: 100%;
+    }
+    
+    .btn-content {
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-icon i {
+        font-size: 20px;
+    }
+    
+    .btn-text .primary-text {
+        font-size: 1rem;
+    }
+    
+    .btn-text .secondary-text {
+        font-size: 0.8rem;
+    }
+}
+
+/* Optional: Add a disabled state */
+.create-subject-btn:disabled {
+    background: linear-gradient(135deg, #9E9E9E, #757575);
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.7;
+}
+
+.create-subject-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Optional: Add a loading state */
+.create-subject-btn.loading .btn-icon {
+    position: relative;
+}
+
+.create-subject-btn.loading .btn-icon i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

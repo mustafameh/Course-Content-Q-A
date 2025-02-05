@@ -410,13 +410,25 @@ function updateKnowledgeBaseButton(subjectId, fileCount) {
     kbButton.classList.toggle('disabled', fileCount === 0);
 }
 
-function showCreateSubjectModal() {
+async function showCreateSubjectModal() {
     if (!state.isDriveConnected) {
         alert('Please connect to Google Drive first');
         return;
     }
-    const modal = document.getElementById('create-subject-modal');
-    modal.style.display = 'block';
+
+    // Add loading state
+    const button = document.querySelector('.create-subject-btn');
+    button.classList.add('loading');
+    button.disabled = true;
+
+    try {
+        const modal = document.getElementById('create-subject-modal');
+        modal.style.display = 'block';
+    } finally {
+        // Remove loading state
+        button.classList.remove('loading');
+        button.disabled = false;
+    }
 }
 
 
@@ -948,14 +960,14 @@ function updateDriveStatus(connected) {
         statusIndicator.className = 'status-indicator status-connected';
         statusText.textContent = 'Connected';
         connectBtn.style.display = 'none';
-        statusElement.className = 'drive-status connected';
-        statusElement.textContent = 'Drive: Connected';
+        //statusElement.className = 'drive-status connected';
+        //statusElement.textContent = 'Drive: Connected';
     } else {
         statusIndicator.className = 'status-indicator status-disconnected';
         statusText.textContent = 'Not Connected';
         connectBtn.style.display = 'block';
-        statusElement.className = 'drive-status disconnected';
-        statusElement.textContent = 'Drive: Not Connected';
+        //statusElement.className = 'drive-status disconnected';
+        //statusElement.textContent = 'Drive: Not Connected';
     }
 }
 
