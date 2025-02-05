@@ -1,41 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Professor Dashboard</title>
+    <title>CourseCompanion - Professor Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='professor_dashboard/styles.css') }}">
-    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='professor_dashboard/sidebar.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='professor_dashboard/sidebar.js') }}" defer></script>
 </head>
 <body>
     <div class="dashboard">
         <div class="sidebar">
-            <div class="profile-section">
-                <h2>Professor Dashboard</h2>
-                <div class="profile-info">
-                    <p id="professor-email">Loading...</p>
-                    <p id="professor-institution">Loading...</p>
-                    <p id="professor-department">Loading...</p>
-                </div>
-            </div>
-
-            <!-- Replace the Google Drive section in the sidebar -->
-            <div class="google-drive-section">
-                <h3>Google Drive Connection</h3>
-                <div class="connection-status">
-                    <div id="drive-status-indicator" class="status-indicator"></div>
-                    <span id="drive-status-text">Checking connection...</span>
-                </div>
-                
-                <div id="drive-connect-btn-container">
-                    <button onclick="connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
-                        <i class="fab fa-google"></i> Connect Drive
-                    </button>
-                </div>
-            </div>
-
-            <button onclick="logout()" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
+            <button class="sidebar-toggle">
+                <i class="fas fa-bars"></i>
             </button>
+            
+            <div class="sidebar-content">
+                <div class="brand-section">
+                    <h2>CourseCompanion</h2>
+                    <p class="tagline">The 24/7 available course assistant</p>
+                </div>
+
+                <div class="profile-section">
+                    <h3>Professor Dashboard</h3>
+                    <div class="profile-info">
+                        <p id="professor-email">Loading...</p>
+                        <p id="professor-institution">Loading...</p>
+                        <p id="professor-department">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="google-drive-section">
+                    <h3>Google Drive Connection</h3>
+                    <div class="connection-status">
+                        <div id="drive-status-indicator" class="status-indicator"></div>
+                        <span id="drive-status-text">Checking connection...</span>
+                    </div>
+                    
+                    <div id="drive-connect-btn-container">
+                        <button onclick="connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
+                            <i class="fab fa-google"></i> Connect Drive
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="logout()" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
         </div>
 
         <div class="main-content">
