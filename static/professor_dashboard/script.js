@@ -168,7 +168,6 @@ async function disconnectDrive() {
     }
 }
 
-// Subject Management
 async function loadSubjects() {
     try {
         // Load both regular and Drive subjects
@@ -182,20 +181,38 @@ async function loadSubjects() {
         
         const container = document.getElementById('subjects-container');
         container.innerHTML = ''; // Clear existing content
+
+        // Create a map of subjects by ID to handle duplicates
+        const subjectsMap = new Map();
         
-        // Render regular subjects
+        // Add regular subjects to map
         regularData.subjects.forEach(subject => {
-            const section = createSubjectSection(subject, false);
-            container.appendChild(section);
-            loadSubjectFiles(subject.id);
+            subjectsMap.set(subject.id, { ...subject, isDrive: false });
         });
         
-        // Render Drive subjects
+        // Update or add Drive subjects
         driveData.subjects.forEach(subject => {
             if (subject.drive_folder_id) {
-                const section = createSubjectSection(subject, true);
-                container.appendChild(section);
+                const existingSubject = subjectsMap.get(subject.id);
+                if (existingSubject) {
+                    // Update existing subject with Drive info
+                    existingSubject.isDrive = true;
+                    existingSubject.drive_folder_id = subject.drive_folder_id;
+                } else {
+                    // Add new Drive subject
+                    subjectsMap.set(subject.id, { ...subject, isDrive: true });
+                }
+            }
+        });
+
+        // Render all subjects
+        subjectsMap.forEach(subject => {
+            const section = createSubjectSection(subject, subject.isDrive);
+            container.appendChild(section);
+            if (subject.isDrive) {
                 loadDriveFiles(subject.id);
+            } else {
+                loadSubjectFiles(subject.id);
             }
         });
     } catch (error) {
