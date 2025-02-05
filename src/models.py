@@ -9,6 +9,9 @@ from passlib.hash import bcrypt
 from sqlalchemy.orm import validates
 from flask_login import UserMixin  # Added UserMixin
 from datetime import datetime
+from sqlalchemy.types import JSON
+
+
 
 Base = declarative_base()
 
@@ -30,6 +33,8 @@ class User(Base, UserMixin):  # Added UserMixin
     created_subjects = relationship('Subject', back_populates='professor')
     enrolled_subjects = relationship('Subject', secondary=subject_enrollment, back_populates='students')
     professor_profile = relationship('ProfessorProfile', back_populates='user', uselist=False)
+    google_drive = relationship('GoogleDriveCredentials', back_populates='professor', uselist=False)
+    
 
     def set_password(self, password):
         self.password_hash = bcrypt.hash(password)
@@ -55,7 +60,8 @@ class User(Base, UserMixin):  # Added UserMixin
             raise ValueError("Username must be a valid email address")
         return username
     
-    
+
+
     
     
 class ProfessorProfile(Base):
@@ -94,7 +100,24 @@ class SubjectFile(Base):
     
     # Relationships
     subject = relationship('Subject', back_populates='files')
-
+    
+    
+# Add to your existing models.py
+class GoogleDriveCredentials(Base):
+    __tablename__ = 'google_drive_credentials'
+    
+    id = Column(Integer, primary_key=True)
+    professor_id = Column(Integer, ForeignKey('users.id'), unique=True)
+    token_info = Column(JSON)  # Stores the OAuth2 tokens
+    drive_folder_id = Column(String(100))  # Root folder ID in Drive
+    connected_at = Column(DateTime, default=datetime.utcnow)
+    last_synced = Column(DateTime)
+    is_active = Column(Boolean, default=True)
+    # Relationship
+    professor = relationship('User', back_populates='google_drive')
+    
+    
+    
 # Database configuration
 engine = create_engine('sqlite:///university.db')
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -107,3 +130,14 @@ def get_db():
         yield db
     finally:
         db.close()
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

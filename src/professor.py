@@ -1,11 +1,14 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session, redirect, url_for, request
 from flask_login import login_required, current_user
-from src.models import User, Subject, SubjectFile, get_db
+from src.models import User, Subject, SubjectFile, get_db, GoogleDriveCredentials
 from werkzeug.utils import secure_filename
 import os
 from functools import wraps
 from sqlalchemy.orm import joinedload
 from datetime import datetime
+from src.google_drive.auth import GoogleDriveAuth
+from src.google_drive.drive_service import GoogleDriveService
+
 professor_bp = Blueprint('professor', __name__, url_prefix='/professor')
 
 # Custom decorator to check if user is a professor and approved
@@ -346,6 +349,129 @@ def get_professor_profile():
             "email": user.username,
             "institution": user.professor_profile.institution,
             "department": user.professor_profile.department
+        })
+    finally:
+        db.close()
+        
+
+@professor_bp.route('/google/auth/start')
+@login_required
+@professor_required
+def start_google_auth():
+    """Start Google OAuth flow"""
+    google_auth = GoogleDriveAuth()
+    auth_url, state = google_auth.get_authorization_url()
+    
+    # Store state in session for verification
+    session['google_auth_state'] = state
+    
+    return jsonify({
+        'auth_url': auth_url
+    })
+
+@professor_bp.route('/google/auth/callback')
+@login_required
+@professor_required
+def oauth2callback():
+    if 'error' in request.args:
+        return jsonify({'error': request.args['error']}), 400
+
+    if 'code' not in request.args:
+        return jsonify({'error': 'No authorization code received'}), 400
+
+    try:
+        google_auth = GoogleDriveAuth()
+        flow = google_auth.create_auth_flow(
+            redirect_uri=url_for('professor.oauth2callback', _external=True)
+        )
+        
+        # Exchange code for tokens
+        flow.fetch_token(authorization_response=request.url)
+        
+        # Get credentials
+        credentials = flow.credentials
+        
+        # Create token info dictionary
+        token_info = {
+            'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes
+        }
+
+        # Create Drive service and verify connection
+        drive_service = GoogleDriveService(credentials)
+        
+        if not drive_service.verify_connection():
+            return jsonify({'error': 'Failed to connect to Google Drive'}), 500
+
+        # Create root folder
+        folder_id = drive_service.create_root_folder(current_user.username)
+        if not folder_id:
+            return jsonify({'error': 'Failed to create root folder'}), 500
+
+        # Store credentials in database
+        db = next(get_db())
+        try:
+            # Check if credentials already exist
+            existing_creds = db.query(GoogleDriveCredentials).filter_by(
+                professor_id=current_user.id
+            ).first()
+            
+            if existing_creds:
+                # Update existing credentials
+                existing_creds.token_info = token_info
+                existing_creds.drive_folder_id = folder_id
+                existing_creds.last_synced = datetime.utcnow()
+                existing_creds.is_active = True
+            else:
+                # Create new credentials
+                google_creds = GoogleDriveCredentials(
+                    professor_id=current_user.id,
+                    token_info=token_info,
+                    drive_folder_id=folder_id,
+                    connected_at=datetime.utcnow(),
+                    last_synced=datetime.utcnow()
+                )
+                db.add(google_creds)
+            
+            db.commit()
+            
+            # Close the popup window and refresh the parent
+            return """
+                <script>
+                    window.opener.postMessage('google-drive-connected', '*');
+                    window.close();
+                </script>
+            """
+            
+        except Exception as e:
+            db.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            db.close()
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@professor_bp.route('/google/status')
+@login_required
+@professor_required
+def get_google_status():
+    """Get Google Drive connection status"""
+    db = next(get_db())
+    try:
+        creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        return jsonify({
+            'connected': bool(creds),
+            'last_synced': creds.last_synced.isoformat() if creds else None,
+            'folder_id': creds.drive_folder_id if creds else None
         })
     finally:
         db.close()
