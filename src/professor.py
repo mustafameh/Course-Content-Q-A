@@ -475,3 +475,410 @@ def get_google_status():
         })
     finally:
         db.close()
+        
+        
+
+# Add new Drive-integrated routes
+@professor_bp.route('/drive/subjects', methods=['POST'])
+@login_required
+@professor_required
+def create_drive_subject():
+    """Create a new subject with Drive folder"""
+    data = request.get_json()
+    
+    if not data or 'name' not in data:
+        return jsonify({"error": "Subject name is required"}), 400
+        
+    db = next(get_db())
+    try:
+        # Check Drive connection first
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({
+                "error": "Google Drive connection required to create subjects"
+            }), 403
+            
+        # Create subject in database
+        new_subject = Subject(
+            name=data['name'],
+            professor_id=current_user.id
+        )
+        db.add(new_subject)
+        db.flush()  # Get subject ID without committing
+        
+        # Create Drive folder
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        folder_id = drive_service.create_subject_folder(
+            drive_creds.drive_folder_id,
+            data['name']
+        )
+        
+        if not folder_id:
+            db.rollback()
+            return jsonify({
+                "error": "Failed to create Drive folder for subject"
+            }), 500
+            
+        # Update subject with folder info
+        new_subject.drive_folder_id = folder_id
+        new_subject.drive_folder_created = datetime.utcnow()
+        
+        db.commit()
+        
+        return jsonify({
+            "message": "Subject created successfully",
+            "subject": {
+                "id": new_subject.id,
+                "name": new_subject.name,
+                "drive_folder_id": folder_id
+            }
+        }), 201
+        
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@professor_bp.route('/drive/subjects', methods=['GET'])
+@login_required
+@professor_required
+def get_drive_subjects():
+    """Get all subjects with Drive status"""
+    db = next(get_db())
+    try:
+        # Get Drive connection status
+        drive_connected = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first() is not None
+        
+        subjects = db.query(Subject).filter_by(professor_id=current_user.id).all()
+        
+        return jsonify({
+            "drive_connected": drive_connected,
+            "subjects": [{
+                "id": subject.id,
+                "name": subject.name,
+                "drive_folder_id": subject.drive_folder_id,
+                "file_count": len(subject.files),
+                "drive_enabled": subject.is_drive_enabled
+            } for subject in subjects]
+        })
+    finally:
+        db.close()
+
+# Add route to delete Drive subject
+@professor_bp.route('/drive/subjects/<int:subject_id>', methods=['DELETE'])
+@login_required
+@professor_required
+def delete_drive_subject(subject_id):
+    """Delete subject and its Drive folder"""
+    db = next(get_db())
+    try:
+        subject = db.query(Subject).filter_by(
+            id=subject_id,
+            professor_id=current_user.id
+        ).first()
+        
+        if not subject:
+            return jsonify({"error": "Subject not found"}), 404
+            
+        if subject.drive_folder_id:
+            # Get Drive credentials
+            drive_creds = db.query(GoogleDriveCredentials).filter_by(
+                professor_id=current_user.id,
+                is_active=True
+            ).first()
+            
+            if drive_creds:
+                # Delete Drive folder
+                google_auth = GoogleDriveAuth()
+                credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+                drive_service = GoogleDriveService(credentials)
+                
+                if not drive_service.delete_folder(subject.drive_folder_id):
+                    return jsonify({
+                        "error": "Failed to delete Drive folder"
+                    }), 500
+        
+        # Delete subject from database
+        db.delete(subject)
+        db.commit()
+        
+        return jsonify({"message": "Subject deleted successfully"})
+        
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+        
+        
+from flask import Blueprint, request, jsonify, current_app
+from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+from src.models import Subject, GoogleDriveCredentials, get_db
+from src.google_drive.drive_service import GoogleDriveService
+from src.google_drive.auth import GoogleDriveAuth
+from datetime import datetime
+import mimetypes
+import os
+
+# File Upload Configuration
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx'}
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# File Upload Routes
+@professor_bp.route('/drive/subjects/<int:subject_id>/upload', methods=['POST'])
+@login_required
+@professor_required
+def upload_to_drive(subject_id):
+    """Upload file to Google Drive subject folder"""
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+        
+    file = request.files['file']
+    if not file or not file.filename:
+        return jsonify({"error": "No file selected"}), 400
+        
+    if not allowed_file(file.filename):
+        return jsonify({"error": "File type not allowed"}), 400
+        
+    if file.content_length and file.content_length > MAX_FILE_SIZE:
+        return jsonify({"error": "File size exceeds limit"}), 400
+
+    db = next(get_db())
+    try:
+        # Get subject and verify ownership
+        subject = db.query(Subject).filter_by(
+            id=subject_id,
+            professor_id=current_user.id
+        ).first()
+        
+        if not subject or not subject.drive_folder_id:
+            return jsonify({"error": "Subject not found or not Drive-enabled"}), 404
+            
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+            
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Upload file
+        filename = secure_filename(file.filename)
+        mime_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        
+        file_metadata = {
+            'name': filename,
+            'parents': [subject.drive_folder_id],
+            'mimeType': mime_type
+        }
+        
+        uploaded_file = drive_service.upload_file(file, file_metadata)
+        
+        return jsonify({
+            "message": "File uploaded successfully",
+            "file": {
+                "id": uploaded_file.get('id'),
+                "name": uploaded_file.get('name'),
+                "mimeType": uploaded_file.get('mimeType')
+            }
+        })
+        
+    except Exception as e:
+        print(f"Upload error: {str(e)}")
+        return jsonify({"error": "Failed to upload file"}), 500
+    finally:
+        db.close()
+
+@professor_bp.route('/drive/subjects/<int:subject_id>/files', methods=['GET'])
+@login_required
+@professor_required
+def get_drive_files(subject_id):
+    """Get files from Drive subject folder"""
+    page = int(request.args.get('page', 1))
+    search = request.args.get('search', '')
+    items_per_page = 10
+    
+    db = next(get_db())
+    try:
+        # Verify subject ownership
+        subject = db.query(Subject).filter_by(
+            id=subject_id,
+            professor_id=current_user.id
+        ).first()
+        
+        if not subject or not subject.drive_folder_id:
+            return jsonify({"error": "Subject not found or not Drive-enabled"}), 404
+            
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+            
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Get files with pagination
+        files, total_files = drive_service.list_folder_files(
+            subject.drive_folder_id,
+            search_term=search,
+            page=page,
+            page_size=items_per_page
+        )
+        
+        total_pages = (total_files + items_per_page - 1) // items_per_page
+        
+        return jsonify({
+            "files": files,
+            "currentPage": page,
+            "totalPages": total_pages,
+            "totalFiles": total_files
+        })
+        
+    except Exception as e:
+        print(f"Error listing files: {str(e)}")
+        return jsonify({"error": "Failed to list files"}), 500
+    finally:
+        db.close()
+
+@professor_bp.route('/drive/files/<file_id>/preview', methods=['GET'])
+@login_required
+@professor_required
+def get_file_preview(file_id):
+    """Get preview information for a Drive file"""
+    db = next(get_db())
+    try:
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+            
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Get file metadata and preview URL
+        file_info = drive_service.get_file_info(file_id)
+        
+        return jsonify({
+            "id": file_info.get('id'),
+            "name": file_info.get('name'),
+            "mimeType": file_info.get('mimeType'),
+            "size": file_info.get('size'),
+            "modifiedTime": file_info.get('modifiedTime'),
+            "previewUrl": drive_service.get_preview_url(file_id)
+        })
+        
+    except Exception as e:
+        print(f"Error getting preview: {str(e)}")
+        return jsonify({"error": "Failed to get file preview"}), 500
+    finally:
+        db.close()
+
+@professor_bp.route('/drive/files/<file_id>', methods=['DELETE'])
+@login_required
+@professor_required
+def delete_drive_file(file_id):
+    """Delete file from Drive"""
+    db = next(get_db())
+    try:
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+            
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Delete file
+        drive_service.delete_file(file_id)
+        
+        return jsonify({"message": "File deleted successfully"})
+        
+    except Exception as e:
+        print(f"Error deleting file: {str(e)}")
+        return jsonify({"error": "Failed to delete file"}), 500
+    finally:
+        db.close()
+
+@professor_bp.route('/drive/subjects/<int:subject_id>/sync', methods=['POST'])
+@login_required
+@professor_required
+def sync_drive_files(subject_id):
+    """Sync files from Drive folder"""
+    db = next(get_db())
+    try:
+        # Verify subject ownership
+        subject = db.query(Subject).filter_by(
+            id=subject_id,
+            professor_id=current_user.id
+        ).first()
+        
+        if not subject or not subject.drive_folder_id:
+            return jsonify({"error": "Subject not found or not Drive-enabled"}), 404
+            
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+            
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Sync files
+        drive_service.sync_folder(subject.drive_folder_id)
+        
+        # Update last synced time
+        drive_creds.last_synced = datetime.utcnow()
+        db.commit()
+        
+        return jsonify({"message": "Files synced successfully"})
+        
+    except Exception as e:
+        print(f"Error syncing files: {str(e)}")
+        return jsonify({"error": "Failed to sync files"}), 500
+    finally:
+        db.close()

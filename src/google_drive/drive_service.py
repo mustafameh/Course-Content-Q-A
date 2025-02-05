@@ -1,34 +1,324 @@
+# src/google_drive/drive_service.py
+
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload, MediaFileUpload
 from googleapiclient.errors import HttpError
+from datetime import datetime
+import io
+import json
+import mimetypes
+from typing import Tuple, List, Dict, Any, Optional
 
 class GoogleDriveService:
+    """Service class for Google Drive operations"""
+    
     def __init__(self, credentials):
+        """Initialize the Drive service with credentials"""
         self.credentials = credentials
         self.service = build('drive', 'v3', credentials=credentials)
 
-    def create_root_folder(self, professor_email):
-        """Create root folder for professor"""
+    def create_subject_folder(self, root_folder_id: str, subject_name: str) -> Optional[str]:
+        """
+        Create a subject folder in Drive
+        
+        Args:
+            root_folder_id: ID of the root folder
+            subject_name: Name of the subject
+            
+        Returns:
+            str: Folder ID if successful, None otherwise
+        """
         try:
             folder_metadata = {
-                'name': f'Course_QA_System_{professor_email}',
-                'mimeType': 'application/vnd.google-apps.folder'
+                'name': f'Subject_{subject_name}',
+                'mimeType': 'application/vnd.google-apps.folder',
+                'parents': [root_folder_id]
             }
             
-            file = self.service.files().create(
+            folder = self.service.files().create(
                 body=folder_metadata,
-                fields='id'
+                fields='id',
+                supportsAllDrives=True
             ).execute()
             
-            return file.get('id')
+            return folder.get('id')
+            
         except HttpError as error:
-            print(f'An error occurred: {error}')
+            print(f'Error creating subject folder: {error}')
             return None
 
-    def verify_connection(self):
-        """Verify Drive connection is working"""
+    def upload_file(self, file, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Upload a file to Drive
+        
+        Args:
+            file: File object from request
+            metadata: File metadata including name and parent folder
+            
+        Returns:
+            dict: Uploaded file information
+        """
         try:
-            # Try to list files (limit to 1) to verify connection
+            # Create file stream
+            file_stream = io.BytesIO(file.read())
+            
+            # Create media upload object
+            media = MediaIoBaseUpload(
+                file_stream,
+                mimetype=metadata.get('mimeType', 'application/octet-stream'),
+                resumable=True
+            )
+            
+            # Upload file
+            file = self.service.files().create(
+                body=metadata,
+                media_body=media,
+                fields='id, name, mimeType, size, modifiedTime',
+                supportsAllDrives=True
+            ).execute()
+            
+            return file
+            
+        except HttpError as error:
+            print(f'Error uploading file: {error}')
+            raise
+
+    def list_folder_files(
+        self, 
+        folder_id: str, 
+        search_term: str = '', 
+        page: int = 1, 
+        page_size: int = 10
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        List files in a folder with pagination and search
+        
+        Args:
+            folder_id: Drive folder ID
+            search_term: Optional search term
+            page: Page number
+            page_size: Items per page
+            
+        Returns:
+            tuple: (list of files, total count)
+        """
+        try:
+            # Build query
+            query = f"'{folder_id}' in parents and trashed = false"
+            if search_term:
+                query += f" and name contains '{search_term}'"
+            
+            # Get total count
+            total_files = self.service.files().list(
+                q=query,
+                spaces='drive',
+                fields='files(id)',
+                supportsAllDrives=True
+            ).execute()
+            total_count = len(total_files.get('files', []))
+            
+            # Get paginated results
+            skip = (page - 1) * page_size
+            results = self.service.files().list(
+                q=query,
+                spaces='drive',
+                fields='files(id, name, mimeType, size, modifiedTime, thumbnailLink)',
+                orderBy='modifiedTime desc',
+                pageSize=page_size,
+                pageToken=None if page == 1 else self._get_page_token(skip),
+                supportsAllDrives=True
+            ).execute()
+            
+            files = results.get('files', [])
+            
+            # Process files
+            processed_files = []
+            for file in files:
+                processed_files.append({
+                    'id': file.get('id'),
+                    'name': file.get('name'),
+                    'mimeType': file.get('mimeType'),
+                    'size': int(file.get('size', 0)),
+                    'modifiedTime': file.get('modifiedTime'),
+                    'thumbnailLink': file.get('thumbnailLink')
+                })
+            
+            return processed_files, total_count
+            
+        except HttpError as error:
+            print(f'Error listing files: {error}')
+            raise
+
+    def get_file_info(self, file_id: str) -> Dict[str, Any]:
+        """
+        Get detailed file information
+        
+        Args:
+            file_id: Drive file ID
+            
+        Returns:
+            dict: File information
+        """
+        try:
+            file = self.service.files().get(
+                fileId=file_id,
+                fields='id, name, mimeType, size, modifiedTime, webViewLink, thumbnailLink',
+                supportsAllDrives=True
+            ).execute()
+            
+            return file
+            
+        except HttpError as error:
+            print(f'Error getting file info: {error}')
+            raise
+
+    def get_preview_url(self, file_id: str) -> str:
+        """
+        Get preview URL for a file
+        
+        Args:
+            file_id: Drive file ID
+            
+        Returns:
+            str: Preview URL
+        """
+        try:
+            file = self.service.files().get(
+                fileId=file_id,
+                fields='webViewLink',
+                supportsAllDrives=True
+            ).execute()
+            
+            return file.get('webViewLink', '')
+            
+        except HttpError as error:
+            print(f'Error getting preview URL: {error}')
+            raise
+
+    def delete_file(self, file_id: str) -> bool:
+        """
+        Delete a file from Drive
+        
+        Args:
+            file_id: Drive file ID
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            self.service.files().delete(
+                fileId=file_id,
+                supportsAllDrives=True
+            ).execute()
+            return True
+            
+        except HttpError as error:
+            print(f'Error deleting file: {error}')
+            raise
+
+    def sync_folder(self, folder_id: str) -> bool:
+        """
+        Sync folder contents (refresh metadata)
+        
+        Args:
+            folder_id: Drive folder ID
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            # List all files to refresh metadata
+            self.service.files().list(
+                q=f"'{folder_id}' in parents",
+                spaces='drive',
+                fields='files(id, name, mimeType, size, modifiedTime)',
+                supportsAllDrives=True
+            ).execute()
+            
+            return True
+            
+        except HttpError as error:
+            print(f'Error syncing folder: {error}')
+            raise
+
+    def verify_connection(self) -> bool:
+        """
+        Verify Drive connection is working
+        
+        Returns:
+            bool: True if connected
+        """
+        try:
             self.service.files().list(pageSize=1).execute()
             return True
         except HttpError:
             return False
+
+    def _get_page_token(self, skip: int) -> Optional[str]:
+        """
+        Get page token for pagination
+        
+        Args:
+            skip: Number of items to skip
+            
+        Returns:
+            str: Page token
+        """
+        if skip == 0:
+            return None
+            
+        try:
+            result = self.service.files().list(
+                pageSize=skip,
+                fields='nextPageToken'
+            ).execute()
+            
+            return result.get('nextPageToken')
+            
+        except HttpError:
+            return None
+
+    def check_file_permissions(self, file_id: str) -> bool:
+        """
+        Check if current user has access to file
+        
+        Args:
+            file_id: Drive file ID
+            
+        Returns:
+            bool: True if has access
+        """
+        try:
+            self.service.files().get(
+                fileId=file_id,
+                fields='id',
+                supportsAllDrives=True
+            ).execute()
+            return True
+        except HttpError:
+            return False
+
+    def update_file_metadata(self, file_id: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update file metadata (name, description, etc.)
+        
+        Args:
+            file_id: Drive file ID
+            metadata: New metadata
+            
+        Returns:
+            dict: Updated file information
+        """
+        try:
+            updated_file = self.service.files().update(
+                fileId=file_id,
+                body=metadata,
+                fields='id, name, mimeType, size, modifiedTime',
+                supportsAllDrives=True
+            ).execute()
+            
+            return updated_file
+            
+        except HttpError as error:
+            print(f'Error updating file metadata: {error}')
+            raise

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Professor Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='professor_dashboard/styles.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <div class="sidebar">
+            <div class="profile-section">
+                <h2>Professor Dashboard</h2>
+                <div class="profile-info">
+                    <p id="professor-email">Loading...</p>
+                    <p id="professor-institution">Loading...</p>
+                    <p id="professor-department">Loading...</p>
+                </div>
+            </div>
+
+            <div class="google-drive-section">
+                <h3>Google Drive Connection</h3>
+                <div class="connection-status">
+                    <div id="drive-status-indicator" class="status-indicator status-disconnected"></div>
+                    <span id="drive-status-text">Disconnected</span>
+                </div>
+                
+                <div id="drive-connect-btn-container">
+                    <button onclick="connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                             alt="Google" class="google-icon">
+                        Connect Drive
+                    </button>
+                </div>
+                
+                <div id="drive-info" class="sync-info" style="display: none">
+                    <p id="last-synced">Last synced: Never</p>
+                    <div class="drive-actions">
+                        <button onclick="refreshDriveConnection()" class="btn btn-primary">Refresh</button>
+                        <button onclick="disconnectDrive()" class="btn btn-danger">Disconnect</button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+
+        <div class="main-content">
+            <div class="drive-header">
+                <button onclick="showCreateSubjectModal('regular')" class="create-subject-btn">
+                    Create New Subject
+                </button>
+                <button onclick="showCreateSubjectModal('drive')" class="drive-subject-btn" id="create-drive-subject-btn" disabled>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                         alt="Google Drive" class="google-icon">
+                    Create Drive Subject
+                </button>
+                <div id="drive-connection-status" class="drive-status disconnected">
+                    Drive: Disconnected
+                </div>
+            </div>
+
+            <div id="subjects-container">
+                <!-- Subject sections will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Subject Modal -->
+<div id="create-subject-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('create-subject-modal')">&times;</span>
+        
+        <div class="modal-tabs">
+            <button class="modal-tab active" onclick="switchTab('regular')">Regular Subject</button>
+            <button class="modal-tab" onclick="switchTab('drive')" id="drive-tab">Drive Subject</button>
+        </div>
+        
+        <!-- Regular Subject Tab -->
+        <div id="regular-tab" class="tab-content active">
+            <h2>Create New Subject</h2>
+            <input type="text" id="new-subject-name" class="input-field" placeholder="Subject Name">
+            <button onclick="createSubject()" class="btn btn-primary">Create</button>
+        </div>
+        
+        <!-- Drive Subject Tab -->
+        <div id="drive-tab-content" class="tab-content"> <!-- Changed ID here -->
+            <h2>Create Drive Subject</h2>
+            <input type="text" id="new-drive-subject-name" class="input-field" placeholder="Subject Name">
+            <div class="info-text">
+                This will create a subject with a dedicated Google Drive folder.
+            </div>
+            <div id="drive-subject-error" class="error-text" style="display: none;"></div>
+            <button onclick="createDriveSubject()" class="btn btn-primary" id="create-drive-btn">Create</button>
+        </div>
+    </div>
+</div>
+
+    <!-- Add File Modal -->
+    <div id="add-file-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('add-file-modal')">&times;</span>
+            <h2>Add File Path</h2>
+            <input type="text" id="new-file-path" class="input-field" placeholder="File Path">
+            <button onclick="addFilePath()" class="btn btn-primary">Add</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='professor_dashboard/script.js') }}"></script>
+</body>
+</html>
