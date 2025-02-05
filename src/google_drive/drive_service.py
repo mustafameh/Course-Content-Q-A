@@ -370,5 +370,24 @@ class GoogleDriveService:
         except HttpError as error:
             print(f'Error updating file metadata: {error}')
             raise
-        
+    
+    def create_root_folder(self, professor_email: str) -> str:
+        """Create root folder for professor in Drive"""
+        try:
+            folder_metadata = {
+                'name': f'Course_Content_QA_{professor_email}',
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            
+            folder = self.service.files().create(
+                body=folder_metadata,
+                fields='id',
+                supportsAllDrives=True
+            ).execute()
+            
+            return folder.get('id')
+            
+        except HttpError as error:
+            print(f'Error creating root folder: {error}')
+            return None
         

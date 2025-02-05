@@ -170,50 +170,22 @@ async function disconnectDrive() {
 
 async function loadSubjects() {
     try {
-        // Load both regular and Drive subjects
-        const [regularResponse, driveResponse] = await Promise.all([
-            fetch('/professor/subjects'),
-            fetch('/professor/drive/subjects')
-        ]);
-
-        const regularData = await regularResponse.json();
-        const driveData = await driveResponse.json();
+        const response = await fetch('/professor/drive/subjects');
+        if (!response.ok) throw new Error('Failed to load subjects');
         
+        const data = await response.json();
         const container = document.getElementById('subjects-container');
         container.innerHTML = ''; // Clear existing content
 
-        // Create a map of subjects by ID to handle duplicates
-        const subjectsMap = new Map();
-        
-        // Add regular subjects to map
-        regularData.subjects.forEach(subject => {
-            subjectsMap.set(subject.id, { ...subject, isDrive: false });
-        });
-        
-        // Update or add Drive subjects
-        driveData.subjects.forEach(subject => {
-            if (subject.drive_folder_id) {
-                const existingSubject = subjectsMap.get(subject.id);
-                if (existingSubject) {
-                    // Update existing subject with Drive info
-                    existingSubject.isDrive = true;
-                    existingSubject.drive_folder_id = subject.drive_folder_id;
-                } else {
-                    // Add new Drive subject
-                    subjectsMap.set(subject.id, { ...subject, isDrive: true });
-                }
-            }
-        });
+        if (data.subjects.length === 0) {
+            container.innerHTML = '<div class="no-subjects">No subjects created yet</div>';
+            return;
+        }
 
-        // Render all subjects
-        subjectsMap.forEach(subject => {
-            const section = createSubjectSection(subject, subject.isDrive);
+        data.subjects.forEach(subject => {
+            const section = createSubjectSection(subject);
             container.appendChild(section);
-            if (subject.isDrive) {
-                loadDriveFiles(subject.id);
-            } else {
-                loadSubjectFiles(subject.id);
-            }
+            loadDriveFiles(subject.id);
         });
     } catch (error) {
         console.error('Error loading subjects:', error);
@@ -221,23 +193,25 @@ async function loadSubjects() {
     }
 }
 
-function createSubjectSection(subject, isDrive) {
+
+
+
+function createSubjectSection(subject) {
     const section = document.createElement('div');
-    section.className = `subject-section ${isDrive ? 'drive-subject-section' : ''}`;
-    
+    section.className = 'subject-section drive-subject-section';
+
     const headerContent = `
         <div class="subject-header">
             ${subject.name}
-            ${isDrive ? `
-                <div class="folder-info">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                         alt="Google Drive" class="google-icon">
-                    Drive Folder Connected
-                </div>
-            ` : ''}
+            <div class="folder-info">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
+                     alt="Google Drive" class="google-icon">
+                Drive Folder Connected
+            </div>
         </div>
     `;
-    const uploadZone = isDrive ? `
+
+    const uploadZone = `
         <div class="file-upload-zone" id="upload-zone-${subject.id}" 
              ondrop="handleFileDrop(event, ${subject.id})" 
              ondragover="handleDragOver(event)"
@@ -260,9 +234,8 @@ function createSubjectSection(subject, isDrive) {
             </div>
             <p class="progress-text" id="progress-text-${subject.id}">Uploading...</p>
         </div>
-    ` : '';
+    `;
 
-    
     const fileListSection = `
         <div class="file-list-header">
             <div class="file-list-controls">
@@ -276,10 +249,9 @@ function createSubjectSection(subject, isDrive) {
                        class="file-search">
             </div>
         </div>
-        <div class="file-list ${isDrive ? 'drive-files' : ''}" 
+        <div class="file-list drive-files" 
              id="files-${subject.id}"
              data-view="list">
-            <!-- Files will be loaded here -->
         </div>
         <div class="file-list-footer">
             <div class="pagination" id="pagination-${subject.id}"></div>
@@ -288,53 +260,35 @@ function createSubjectSection(subject, isDrive) {
 
     const actionsContent = `
         <div class="action-buttons">
-            ${isDrive ? `
-                <button onclick="openDriveFolder('${subject.drive_folder_id}')" class="btn btn-primary">
-                    <i class="fas fa-external-link-alt"></i> Open in Drive
-                </button>
-                <button onclick="syncDriveFiles(${subject.id})" class="btn btn-primary">
-                    <i class="fas fa-sync"></i> Sync Files
-                </button>
-            ` : `
-                <button onclick="showAddFileModal(${subject.id})" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add File Path
-                </button>
-            `}
+            <button onclick="openDriveFolder('${subject.drive_folder_id}')" class="btn btn-primary">
+                <i class="fas fa-external-link-alt"></i> Open in Drive
+            </button>
+            <button onclick="syncDriveFiles(${subject.id})" class="btn btn-primary">
+                <i class="fas fa-sync"></i> Sync Files
+            </button>
             <button onclick="updateKnowledgeBase(${subject.id})" 
                     class="btn btn-success" 
-                    id="kb-btn-${subject.id}"
-                    disabled>
+                    id="kb-btn-${subject.id}">
                 <i class="fas fa-database"></i> Create/Update Knowledge Base
             </button>
-            <button onclick="${isDrive ? 'deleteDriveSubject' : 'deleteSubject'}(${subject.id})" 
+            <button onclick="deleteDriveSubject(${subject.id})" 
                     class="btn btn-danger">
                 <i class="fas fa-trash"></i> Delete Subject
             </button>
         </div>
     `;
-    
+
     section.innerHTML = `
         ${headerContent}
         ${fileListSection}
         ${uploadZone}
         ${actionsContent}
     `;
-    
+
     return section;
 }
 
 // File Management
-async function loadSubjectFiles(subjectId) {
-    try {
-        const response = await fetch(`/professor/subjects/${subjectId}/files`);
-        if (!response.ok) throw new Error('Failed to load files');
-        
-        const data = await response.json();
-        updateFilesList(subjectId, data.files);
-    } catch (error) {
-        console.error('Error loading files:', error);
-    }
-}
 
 async function loadDriveFiles(subjectId) {
     try {
@@ -393,64 +347,28 @@ function updateKnowledgeBaseButton(subjectId, fileCount) {
     kbButton.classList.toggle('disabled', fileCount === 0);
 }
 
-// Update showCreateSubjectModal function
-function showCreateSubjectModal(type = 'regular') {
+function showCreateSubjectModal() {
+    if (!state.isDriveConnected) {
+        alert('Please connect to Google Drive first');
+        return;
+    }
     const modal = document.getElementById('create-subject-modal');
     modal.style.display = 'block';
-    
-    // Update UI based on Drive connection status
-    const driveTab = document.getElementById('drive-tab');
-    if (driveTab) {
-        driveTab.style.display = state.isDriveConnected ? 'block' : 'none';
-    }
-    
-    // Switch to appropriate tab
-    switchTab(type);
-    
-    // If trying to open drive tab but not connected, switch to regular
-    if (type === 'drive' && !state.isDriveConnected) {
-        switchTab('regular');
-        alert('Please connect to Google Drive first');
-    }
 }
 
-function showAddFileModal(subjectId) {
-    state.currentSubjectId = subjectId;
-    document.getElementById('add-file-modal').style.display = 'block';
-}
 
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    modal.style.display = 'none';
-    
-    if (modalId === 'create-subject-modal') {
-        document.getElementById('new-subject-name').value = '';
-        document.getElementById('new-drive-subject-name').value = '';
-        document.getElementById('drive-subject-error').style.display = 'none';
-    } else if (modalId === 'add-file-modal') {
-        document.getElementById('new-file-path').value = '';
-        state.currentSubjectId = null;
+    if (modal) {
+        modal.style.display = 'none';
+        // Clear any input fields and errors
+        const input = modal.querySelector('input');
+        const error = modal.querySelector('.error-text');
+        if (input) input.value = '';
+        if (error) error.style.display = 'none';
     }
 }
 
-function switchTab(tabName) {
-    // Remove active class from all tabs and contents
-    const tabs = document.querySelectorAll('.modal-tab');
-    const contents = document.querySelectorAll('.tab-content');
-    
-    tabs.forEach(tab => tab.classList.remove('active'));
-    contents.forEach(content => content.classList.remove('active'));
-    
-    // Add active class to selected tab
-    document.querySelector(`.modal-tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
-    
-    // Add active class to selected content
-    const contentId = tabName === 'regular' ? 'regular-tab' : 'drive-tab-content';
-    const content = document.getElementById(contentId);
-    if (content) {
-        content.classList.add('active');
-    }
-}
 
 // Subject Creation and Deletion
 async function createSubject() {
@@ -478,8 +396,8 @@ async function createSubject() {
 }
 
 async function createDriveSubject() {
-    const name = document.getElementById('new-drive-subject-name').value.trim();
-    const errorElement = document.getElementById('drive-subject-error');
+    const name = document.getElementById('new-subject-name').value.trim();
+    const errorElement = document.getElementById('subject-error');
     
     if (!name) {
         errorElement.textContent = 'Please enter a subject name';
@@ -550,48 +468,6 @@ async function deleteDriveSubject(subjectId) {
 }
 
 // File Operations
-async function addFilePath() {
-    if (!state.currentSubjectId) return;
-    
-    const filepath = document.getElementById('new-file-path').value.trim();
-    if (!filepath) {
-        alert('Please enter a file path');
-        return;
-    }
-
-    try {
-        const response = await fetch(`/professor/subjects/${state.currentSubjectId}/files`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filepath })
-        });
-
-        if (!response.ok) throw new Error('Failed to add file');
-        
-        closeModal('add-file-modal');
-        loadSubjectFiles(state.currentSubjectId);
-    } catch (error) {
-        console.error('Error adding file:', error);
-        alert('Failed to add file');
-    }
-}
-
-async function deleteFile(fileId, subjectId) {
-    if (!confirm('Are you sure you want to remove this file path?')) return;
-
-    try {
-        const response = await fetch(`/professor/subjects/files/${fileId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error('Failed to delete file');
-        
-        loadSubjectFiles(subjectId);
-    } catch (error) {
-        console.error('Error deleting file:', error);
-        alert('Failed to delete file');
-    }
-}
 
 async function deleteDriveFile(fileId, subjectId) {
     if (!confirm('Are you sure you want to remove this file?')) return;
@@ -973,5 +849,65 @@ function updateKnowledgeBaseButton(subjectId, fileCount = 0) {
         const hasFiles = fileCount > 0;
         kbButton.disabled = !hasFiles;
         kbButton.classList.toggle('disabled', !hasFiles);
+    }
+}
+
+// Add this to your script.js
+window.addEventListener('message', function(event) {
+    if (event.data === 'google-drive-connected') {
+        // Refresh Drive status
+        loadGoogleDriveStatus();
+        // Reload subjects
+        loadSubjects();
+    }
+});
+
+async function loadGoogleDriveStatus() {
+    try {
+        const response = await fetch('/professor/google/status');
+        const data = await response.json();
+        
+        // Update state
+        state.isDriveConnected = data.connected;
+        
+        // Update UI
+        updateDriveStatus(data.connected, data.last_synced);
+        updateDriveUI();
+        
+        console.log('Drive status updated:', data);  // Add this for debugging
+    } catch (error) {
+        console.error('Error loading Drive status:', error);
+        updateDriveStatus(false);
+    }
+}
+
+function updateDriveStatus(connected, lastSynced = null) {
+    const statusIndicator = document.getElementById('drive-status-indicator');
+    const statusText = document.getElementById('drive-status-text');
+    const driveInfo = document.getElementById('drive-info');
+    const connectBtn = document.getElementById('connect-drive-btn');
+    const statusElement = document.getElementById('drive-connection-status');
+
+    if (connected) {
+        statusIndicator.className = 'status-indicator status-connected';
+        statusText.textContent = 'Connected';
+        driveInfo.style.display = 'block';
+        connectBtn.style.display = 'none';
+        statusElement.className = 'drive-status connected';
+        statusElement.textContent = `Drive: Connected${lastSynced ? ` (Last synced: ${new Date(lastSynced).toLocaleString()})` : ''}`;
+    } else {
+        statusIndicator.className = 'status-indicator status-disconnected';
+        statusText.textContent = 'Disconnected';
+        driveInfo.style.display = 'none';
+        connectBtn.style.display = 'block';
+        statusElement.className = 'drive-status disconnected';
+        statusElement.textContent = 'Drive: Disconnected';
+    }
+}
+
+function updateDriveUI() {
+    const createSubjectBtn = document.querySelector('.create-subject-btn');
+    if (createSubjectBtn) {
+        createSubjectBtn.disabled = !state.isDriveConnected;
     }
 }

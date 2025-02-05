@@ -79,37 +79,33 @@ class ProfessorProfile(Base):
     
     
 class Subject(Base):
-    """Course subject model"""
     __tablename__ = 'subjects'
-    
+
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     professor_id = Column(Integer, ForeignKey('users.id'))
-    # Add new fields for Drive integration
-    drive_folder_id = Column(String(100))  # Store Google Drive folder ID
-    drive_folder_created = Column(DateTime)  # Track when folder was created
-    
+    drive_folder_id = Column(String(100))
+    drive_folder_created = Column(DateTime)
+
     # Relationships
     professor = relationship('User', back_populates='created_subjects')
     students = relationship('User', secondary=subject_enrollment, back_populates='enrolled_subjects')
-    files = relationship('SubjectFile', back_populates='subject')
 
     @property
     def is_drive_enabled(self):
-        """Check if subject has Drive folder setup"""
         return bool(self.drive_folder_id)
-    
 
-class SubjectFile(Base):
-    """Course material files model"""
-    __tablename__ = 'subject_files'
-    id = Column(Integer, primary_key=True)
-    filename = Column(String(255), nullable=False)
-    path = Column(String(255), nullable=False)
-    subject_id = Column(Integer, ForeignKey('subjects.id'))
-    
-    # Relationships
-    subject = relationship('Subject', back_populates='files')
+    def get_file_count(self, drive_service=None):
+        """Get file count from Drive folder"""
+        if not self.drive_folder_id:
+            return 0
+        if not drive_service:
+            return 0
+        try:
+            files, _ = drive_service.list_folder_files(self.drive_folder_id)
+            return len(files)
+        except:
+            return 0
     
     
 # Add to your existing models.py

@@ -3,6 +3,8 @@
 <head>
     <title>Professor Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='professor_dashboard/styles.css') }}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="dashboard">
@@ -25,8 +27,7 @@
                 
                 <div id="drive-connect-btn-container">
                     <button onclick="connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                             alt="Google" class="google-icon">
+                        <i class="fab fa-google"></i>
                         Connect Drive
                     </button>
                 </div>
@@ -34,24 +35,25 @@
                 <div id="drive-info" class="sync-info" style="display: none">
                     <p id="last-synced">Last synced: Never</p>
                     <div class="drive-actions">
-                        <button onclick="refreshDriveConnection()" class="btn btn-primary">Refresh</button>
-                        <button onclick="disconnectDrive()" class="btn btn-danger">Disconnect</button>
+                        <button onclick="refreshDriveConnection()" class="btn btn-primary">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                        <button onclick="disconnectDrive()" class="btn btn-danger">
+                            <i class="fas fa-unlink"></i> Disconnect
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <button onclick="logout()" class="logout-btn">Logout</button>
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
         </div>
 
         <div class="main-content">
             <div class="drive-header">
-                <button onclick="showCreateSubjectModal('regular')" class="create-subject-btn">
-                    Create New Subject
-                </button>
-                <button onclick="showCreateSubjectModal('drive')" class="drive-subject-btn" id="create-drive-subject-btn" disabled>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" 
-                         alt="Google Drive" class="google-icon">
-                    Create Drive Subject
+                <button onclick="showCreateSubjectModal()" class="create-subject-btn">
+                    <i class="fas fa-plus"></i> Create New Subject
                 </button>
                 <div id="drive-connection-status" class="drive-status disconnected">
                     Drive: Disconnected
@@ -65,42 +67,26 @@
     </div>
 
     <!-- Create Subject Modal -->
-<div id="create-subject-modal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('create-subject-modal')">&times;</span>
-        
-        <div class="modal-tabs">
-            <button class="modal-tab active" onclick="switchTab('regular')">Regular Subject</button>
-            <button class="modal-tab" onclick="switchTab('drive')" id="drive-tab">Drive Subject</button>
-        </div>
-        
-        <!-- Regular Subject Tab -->
-        <div id="regular-tab" class="tab-content active">
-            <h2>Create New Subject</h2>
-            <input type="text" id="new-subject-name" class="input-field" placeholder="Subject Name">
-            <button onclick="createSubject()" class="btn btn-primary">Create</button>
-        </div>
-        
-        <!-- Drive Subject Tab -->
-        <div id="drive-tab-content" class="tab-content"> <!-- Changed ID here -->
-            <h2>Create Drive Subject</h2>
-            <input type="text" id="new-drive-subject-name" class="input-field" placeholder="Subject Name">
-            <div class="info-text">
-                This will create a subject with a dedicated Google Drive folder.
-            </div>
-            <div id="drive-subject-error" class="error-text" style="display: none;"></div>
-            <button onclick="createDriveSubject()" class="btn btn-primary" id="create-drive-btn">Create</button>
-        </div>
-    </div>
-</div>
-
-    <!-- Add File Modal -->
-    <div id="add-file-modal" class="modal">
+    <div id="create-subject-modal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('add-file-modal')">&times;</span>
-            <h2>Add File Path</h2>
-            <input type="text" id="new-file-path" class="input-field" placeholder="File Path">
-            <button onclick="addFilePath()" class="btn btn-primary">Add</button>
+            <div class="modal-header">
+                <h2>Create New Subject</h2>
+                <span class="close" onclick="closeModal('create-subject-modal')">
+                    <i class="fas fa-times"></i>
+                </span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-subject-name">Subject Name</label>
+                    <input type="text" id="new-subject-name" class="input-field" placeholder="Enter subject name">
+                </div>
+                <div id="subject-error" class="error-text" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="createDriveSubject()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Subject
+                </button>
+            </div>
         </div>
     </div>
 

@@ -22,7 +22,7 @@ class SubjectDocumentLoader:
         )
 
     def load_subject_documents(self, subject_id: int, professor_id: int) -> List[Document]:
-        """Load documents from either local paths or Google Drive"""
+        """Load documents from Google Drive"""
         db = next(get_db())
         try:
             # Get subject
@@ -34,39 +34,13 @@ class SubjectDocumentLoader:
             if not subject:
                 raise Exception("Subject not found")
 
-            # If subject has drive_folder_id, load from Drive
-            if subject.drive_folder_id:
-                return self._load_drive_documents(subject, professor_id)
-            else:
-                # Load from local paths
-                return self._load_local_documents([file.path for file in subject.files])
+            if not subject.drive_folder_id:
+                raise Exception("Subject is not Drive-enabled")
+
+            return self._load_drive_documents(subject, professor_id)
                 
         finally:
             db.close()
-
-    def _load_local_documents(self, file_paths: List[str]) -> List[Document]:
-        """Load documents from local file paths"""
-        documents = []
-        
-        for file_path in file_paths:
-            if not os.path.exists(file_path):
-                print(f"Warning: File not found - {file_path}")
-                continue
-                
-            try:
-                loader = UnstructuredFileLoader(file_path)
-                docs = loader.load()
-                
-                # Add metadata
-                for doc in docs:
-                    doc.metadata["source"] = file_path
-                
-                documents.extend(docs)
-            except Exception as e:
-                print(f"Error loading file {file_path}: {str(e)}")
-                continue
-
-        return self.text_splitter.split_documents(documents)
 
     def _load_drive_documents(self, subject: Subject, professor_id: int) -> List[Document]:
         """Load documents from Google Drive"""

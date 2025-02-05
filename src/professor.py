@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session, redirect, url_for, request
 from flask_login import login_required, current_user
-from src.models import User, Subject, SubjectFile, get_db, GoogleDriveCredentials
+from src.models import User, Subject, get_db, GoogleDriveCredentials
 from werkzeug.utils import secure_filename
 import os
 from functools import wraps
@@ -77,143 +77,34 @@ def get_professor_subjects():
     db = next(get_db())
     try:
         subjects = db.query(Subject).filter_by(professor_id=current_user.id).all()
+        
+        # Get Drive service if available
+        drive_service = None
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if drive_creds:
+            google_auth = GoogleDriveAuth()
+            credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+            drive_service = GoogleDriveService(credentials)
+
         return jsonify({
             "subjects": [{
                 "id": subject.id,
                 "name": subject.name,
-                "file_count": len(subject.files)
+                "file_count": subject.get_file_count(drive_service),
+                "drive_folder_id": subject.drive_folder_id,
+                "drive_enabled": subject.is_drive_enabled
             } for subject in subjects]
         })
     finally:
         db.close()
 
-@professor_bp.route('/subjects/<int:subject_id>/files', methods=['POST'])
-@login_required
-@professor_required
-def add_subject_file(subject_id):
-    """Add a file path to a subject"""
-    db = next(get_db())
-    try:
-        subject = db.query(Subject).filter_by(
-            id=subject_id, 
-            professor_id=current_user.id
-        ).first()
-        
-        if not subject:
-            return jsonify({"error": "Subject not found or unauthorized"}), 404
-
-        data = request.get_json()
-        if not data or 'filepath' not in data:
-            return jsonify({"error": "File path is required"}), 400
-
-        # Secure the filename and create file entry
-        filename = secure_filename(os.path.basename(data['filepath']))
-        new_file = SubjectFile(
-            filename=filename,
-            path=data['filepath'],
-            subject_id=subject_id
-        )
-        
-        db.add(new_file)
-        db.commit()
-
-        return jsonify({
-            "message": "File added successfully",
-            "file": {
-                "id": new_file.id,
-                "filename": new_file.filename,
-                "path": new_file.path
-            }
-        }), 201
-
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
-
-@professor_bp.route('/subjects/<int:subject_id>/files', methods=['GET'])
-@login_required
-@professor_required
-def get_subject_files(subject_id):
-    """Get all files in a subject"""
-    db = next(get_db())
-    try:
-        subject = db.query(Subject).filter_by(
-            id=subject_id, 
-            professor_id=current_user.id
-        ).first()
-        
-        if not subject:
-            return jsonify({"error": "Subject not found or unauthorized"}), 404
-
-        return jsonify({
-            "subject": subject.name,
-            "files": [{
-                "id": file.id,
-                "filename": file.filename,
-                "path": file.path
-            } for file in subject.files]
-        })
-    finally:
-        db.close()
-
-@professor_bp.route('/subjects/<int:subject_id>', methods=['DELETE'])
-@login_required
-@professor_required
-def delete_subject(subject_id):
-    """Delete a subject and its associated files"""
-    db = next(get_db())
-    try:
-        subject = db.query(Subject).filter_by(
-            id=subject_id, 
-            professor_id=current_user.id
-        ).first()
-        
-        if not subject:
-            return jsonify({"error": "Subject not found or unauthorized"}), 404
-
-        db.delete(subject)
-        db.commit()
-
-        return jsonify({"message": "Subject deleted successfully"})
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
-        
-        
-        
 
 
 
-
-@professor_bp.route('/subjects/files/<int:file_id>', methods=['DELETE'])
-@login_required
-@professor_required
-def delete_subject_file(file_id):
-    """Delete a specific file from a subject"""
-    db = next(get_db())
-    try:
-        # Get the file and verify professor owns the associated subject
-        file = db.query(SubjectFile).join(Subject).filter(
-            SubjectFile.id == file_id,
-            Subject.professor_id == current_user.id
-        ).first()
-        
-        if not file:
-            return jsonify({"error": "File not found or unauthorized"}), 404
-
-        db.delete(file)
-        db.commit()
-
-        return jsonify({"message": "File deleted successfully"})
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
         
 
 """professor.py"""
@@ -370,6 +261,7 @@ def start_google_auth():
 @login_required
 @professor_required
 def oauth2callback():
+    """Handle Google OAuth callback"""
     if 'error' in request.args:
         return jsonify({'error': request.args['error']}), 400
 
@@ -377,28 +269,17 @@ def oauth2callback():
         return jsonify({'error': 'No authorization code received'}), 400
 
     try:
+        # Get the authorization code
         google_auth = GoogleDriveAuth()
         flow = google_auth.create_auth_flow(
             redirect_uri=url_for('professor.oauth2callback', _external=True)
         )
         
         # Exchange code for tokens
-        flow.fetch_token(authorization_response=request.url)
+        token_info = google_auth.process_oauth2_callback(flow, request.args['code'])
         
-        # Get credentials
-        credentials = flow.credentials
-        
-        # Create token info dictionary
-        token_info = {
-            'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes
-        }
-
         # Create Drive service and verify connection
+        credentials = google_auth.get_credentials_from_token(token_info)
         drive_service = GoogleDriveService(credentials)
         
         if not drive_service.verify_connection():
@@ -430,13 +311,14 @@ def oauth2callback():
                     token_info=token_info,
                     drive_folder_id=folder_id,
                     connected_at=datetime.utcnow(),
-                    last_synced=datetime.utcnow()
+                    last_synced=datetime.utcnow(),
+                    is_active=True
                 )
                 db.add(google_creds)
             
             db.commit()
             
-            # Close the popup window and refresh the parent
+            # Return success HTML that closes the popup and refreshes the parent
             return """
                 <script>
                     window.opener.postMessage('google-drive-connected', '*');
@@ -446,13 +328,16 @@ def oauth2callback():
             
         except Exception as e:
             db.rollback()
+            print(f"Database error in oauth2callback: {str(e)}")
             return jsonify({'error': str(e)}), 500
         finally:
             db.close()
 
     except Exception as e:
+        print(f"Error in oauth2callback: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
+    
+    
 @professor_bp.route('/google/status')
 @login_required
 @professor_required
@@ -464,10 +349,10 @@ def get_google_status():
             professor_id=current_user.id,
             is_active=True
         ).first()
-        
+
         return jsonify({
             'connected': bool(creds),
-            'last_synced': creds.last_synced.isoformat() if creds else None,
+            'last_synced': creds.last_synced.isoformat() if creds and creds.last_synced else None,
             'folder_id': creds.drive_folder_id if creds else None
         })
     finally:
@@ -552,11 +437,19 @@ def get_drive_subjects():
     db = next(get_db())
     try:
         # Get Drive connection status
-        drive_connected = db.query(GoogleDriveCredentials).filter_by(
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
             professor_id=current_user.id,
             is_active=True
-        ).first() is not None
+        ).first()
         
+        drive_connected = bool(drive_creds)
+        drive_service = None
+        
+        if drive_creds:
+            google_auth = GoogleDriveAuth()
+            credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+            drive_service = GoogleDriveService(credentials)
+
         subjects = db.query(Subject).filter_by(professor_id=current_user.id).all()
         
         return jsonify({
@@ -565,7 +458,7 @@ def get_drive_subjects():
                 "id": subject.id,
                 "name": subject.name,
                 "drive_folder_id": subject.drive_folder_id,
-                "file_count": len(subject.files),
+                "file_count": subject.get_file_count(drive_service),
                 "drive_enabled": subject.is_drive_enabled
             } for subject in subjects]
         })
