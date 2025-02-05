@@ -54,3 +54,7 @@ def register():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
+@app.context_processor
+def inject_js_type():
+    return dict(js_type='module' if not app.debug else 'text/javascript')
