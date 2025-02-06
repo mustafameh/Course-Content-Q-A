@@ -1,0 +1,203 @@
+:root {
+    --primary-bg: #1a2634;
+    --secondary-bg: #243242;
+    --text-primary: #ffffff;
+    --text-secondary: #a8b2c1;
+    --accent-color: #2196f3;
+    --hover-color: rgba(255, 255, 255, 0.1);
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+}
+
+.chat-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.chat-container {
+    width: 100%;
+    max-width: 800px;
+    background-color: var(--secondary-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.chat-header {
+    padding: 20px;
+    background-color: var(--primary-bg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.chat-header h1 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.chat-header .subtitle {
+    margin: 5px 0 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.subject-selector {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.subject-selector select {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.chat-messages {
+    height: 400px;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: var(--secondary-bg);
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.message {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 8px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.user-message {
+    background-color: var(--accent-color);
+    color: white;
+    margin-left: auto;
+}
+
+.bot-message {
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+    margin-right: auto;
+}
+
+.system-message {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 10px auto;
+}
+
+.error-message {
+    background-color: var(--error-color);
+    color: white;
+    text-align: center;
+    margin: 10px auto;
+}
+
+.source {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    background-color: var(--primary-bg);
+}
+
+.input-container input {
+    flex-grow: 1;
+    padding: 12px;
+    background-color: var(--secondary-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.input-container input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+button {
+    padding: 12px 20px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+button:hover {
+    background-color: #1976d2;
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.controls {
+    padding: 0 20px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .chat-messages {
+        height: calc(100vh - 300px);
+    }
+
+    .message {
+        max-width: 90%;
+    }
+}

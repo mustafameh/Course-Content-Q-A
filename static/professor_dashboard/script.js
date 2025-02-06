@@ -129,22 +129,42 @@ async function loadSubjects() {
 function createSubjectSection(subject) {
     const section = document.createElement('div');
     section.className = 'subject-section drive-subject-section';
-    section.setAttribute('data-subject-id', subject.id);  // Add this line
+    section.setAttribute('data-subject-id', subject.id);
 
     const headerContent = `
         <div class="subject-header">
             <div class="subject-title">
                 <h3>${subject.name}</h3>
                 <button onclick="showEditSubject(${subject.id})" class="btn btn-sm btn-secondary">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i>
                 </button>
             </div>
             <div class="subject-description">
                 ${subject.description || 'No description'}
             </div>
-            <div class="folder-info">
-                <i class="fab fa-google-drive"></i> Drive Folder Connected
+
+        </div>
+    `;
+
+    const fileListSection = `
+        <div class="file-list-header">
+            <div class="file-list-controls">
+                <select onchange="changeFileView(${subject.id}, this.value)" class="view-select">
+                    <option value="list">List View</option>
+                    <option value="grid">Grid View</option>
+                </select>
+                <input type="text" 
+                       placeholder="Search files..." 
+                       onkeyup="searchFiles(${subject.id}, this.value)"
+                       class="file-search">
             </div>
+        </div>
+        <div class="file-list drive-files" 
+             id="files-${subject.id}"
+             data-view="list">
+        </div>
+        <div class="file-list-footer">
+            <div class="pagination" id="pagination-${subject.id}"></div>
         </div>
     `;
 
@@ -173,47 +193,22 @@ function createSubjectSection(subject) {
         </div>
     `;
 
-    const fileListSection = `
-        <div class="file-list-header">
-            <div class="file-list-controls">
-                <select onchange="changeFileView(${subject.id}, this.value)" class="view-select">
-                    <option value="list">List View</option>
-                    <option value="grid">Grid View</option>
-                </select>
-                <input type="text" 
-                       placeholder="Search files..." 
-                       onkeyup="searchFiles(${subject.id}, this.value)"
-                       class="file-search">
-            </div>
-        </div>
-        <div class="file-list drive-files" 
-             id="files-${subject.id}"
-             data-view="list">
-        </div>
-        <div class="file-list-footer">
-            <div class="pagination" id="pagination-${subject.id}"></div>
-        </div>
-    `;
-
     const actionsContent = `
-        <div class="action-buttons">
-            <button onclick="openDriveFolder('${subject.drive_folder_id}')" class="btn btn-primary">
-                <i class="fas fa-external-link-alt"></i> Open in Drive
-            </button>
-            <button onclick="syncDriveFiles(${subject.id})" class="btn btn-primary">
-                <i class="fas fa-sync"></i> Sync Files
-            </button>
-            <button onclick="updateKnowledgeBase(${subject.id})" 
-                    class="btn btn-success" 
-                    id="kb-btn-${subject.id}">
-                <i class="fas fa-database"></i> Create/Update Knowledge Base
-            </button>
-            <button onclick="deleteDriveSubject(${subject.id})" 
-                    class="btn btn-danger">
-                <i class="fas fa-trash"></i> Delete Subject
-            </button>
-        </div>
-    `;
+    <div class="subject-actions">
+        <button onclick="openDriveFolder('${subject.drive_folder_id}')" class="btn btn-drive" title="Open in Google Drive">
+            <i class="fab fa-google-drive"></i> Drive
+        </button>
+        <button onclick="updateKnowledgeBase(${subject.id})" 
+                class="btn btn-kb" 
+                id="kb-btn-${subject.id}"
+                title="Sync files and save to knowledge base">
+            <i class="fas fa-database"></i> Save to KB
+        </button>
+        <button onclick="deleteDriveSubject(${subject.id})" class="btn btn-delete" title="Delete subject">
+            <i class="fas fa-trash"></i> Delete
+        </button>
+    </div>
+`;
 
     section.innerHTML = `
         ${headerContent}
@@ -512,36 +507,76 @@ async function syncDriveFiles(subjectId) {
     }
 }
 
-// Knowledge Base Operations
+// Modify the updateKnowledgeBase function
 async function updateKnowledgeBase(subjectId) {
-    if (!confirm('Are you sure you want to create/update the knowledge base? This may take a while.')) return;
+    const kbButton = document.getElementById(`kb-btn-${subjectId}`);
+    if (!confirm('This will sync your files and update the knowledge base. Continue?')) return;
+
+    // Set loading state
+    kbButton.disabled = true;
+    kbButton.classList.add('loading');
+    kbButton.innerHTML = `
+        <div class="spinner"></div>
+        <span>Syncing & Saving...</span>
+    `;
 
     try {
-        const response = await fetch(`/professor/subjects/${subjectId}/knowledge-base`, {
+        // First sync the files
+        const syncResponse = await fetch(`/professor/drive/subjects/${subjectId}/sync`, {
+            method: 'POST'
+        });
+        
+        if (!syncResponse.ok) throw new Error('Failed to sync files');
+
+        // Then update knowledge base
+        const kbResponse = await fetch(`/professor/subjects/${subjectId}/knowledge-base`, {
             method: 'POST'
         });
 
-        if (!response.ok) throw new Error('Failed to update knowledge base');
+        if (!kbResponse.ok) throw new Error('Failed to update knowledge base');
         
-        alert('Knowledge base updated successfully');
+        // Success state
+        kbButton.classList.remove('loading');
+        kbButton.classList.add('success');
+        kbButton.innerHTML = `
+            <i class="fas fa-check"></i>
+            <span>Saved to KB</span>
+        `;
+        kbButton.disabled = false;
+
     } catch (error) {
         console.error('Error updating knowledge base:', error);
-        alert('Failed to update knowledge base');
+        
+        // Error state
+        kbButton.classList.remove('loading');
+        kbButton.classList.add('error');
+        kbButton.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Update Failed</span>
+        `;
+        kbButton.disabled = false;
     }
 }
 
 // Utility Functions
 function getFileIcon(mimeType) {
-    // Add more mime types as needed
+    // Using publicly available file type icons
     const iconMap = {
-        'application/pdf': '/static/images/icons/pdf.png',
-        'application/msword': '/static/images/icons/doc.png',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/static/images/icons/doc.png',
-        'text/plain': '/static/images/icons/txt.png'
+        'application/pdf': 'https://cdn-icons-png.flaticon.com/512/337/337946.png',
+        'application/msword': 'https://cdn-icons-png.flaticon.com/512/337/337932.png',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'https://cdn-icons-png.flaticon.com/512/337/337932.png',
+        'text/plain': 'https://cdn-icons-png.flaticon.com/512/337/337956.png',
+        'application/vnd.ms-excel': 'https://cdn-icons-png.flaticon.com/512/337/337958.png',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'https://cdn-icons-png.flaticon.com/512/337/337958.png',
+        'application/vnd.ms-powerpoint': 'https://cdn-icons-png.flaticon.com/512/337/337949.png',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'https://cdn-icons-png.flaticon.com/512/337/337949.png'
     };
     
-    return iconMap[mimeType] || '/static/images/icons/file.png';
+    // Default file icon for unknown types
+    return iconMap[mimeType] || 'https://cdn-icons-png.flaticon.com/512/337/337937.png';
 }
+
+
 
 // Authentication
 async function logout() {
@@ -633,7 +668,17 @@ async function uploadFiles(files, subjectId) {
         
         // Refresh file list
         await loadDriveFiles(subjectId);
-        updateKnowledgeBaseButton(subjectId);
+        
+        // Enable KB button since we now have files
+        const kbButton = document.getElementById(`kb-btn-${subjectId}`);
+        if (kbButton) {
+            kbButton.disabled = false;
+            kbButton.classList.remove('disabled');
+            kbButton.innerHTML = `
+                <i class="fas fa-database"></i>
+                <span>Save to KB</span>
+            `;
+        }
         
         // Show success message
         progressText.textContent = 'Upload completed successfully!';
@@ -645,6 +690,28 @@ async function uploadFiles(files, subjectId) {
         console.error('Upload error:', error);
         progressText.textContent = `Error: ${error.message}`;
         progressBar.style.backgroundColor = '#dc3545';
+    }
+}
+
+// Update the updateKnowledgeBaseButton function
+function updateKnowledgeBaseButton(subjectId, fileCount = 0) {
+    const kbButton = document.getElementById(`kb-btn-${subjectId}`);
+    if (kbButton) {
+        const hasFiles = fileCount > 0;
+        kbButton.disabled = !hasFiles;
+        kbButton.classList.toggle('disabled', !hasFiles);
+        
+        if (!hasFiles) {
+            kbButton.innerHTML = `
+                <i class="fas fa-database"></i>
+                <span>No Files to Save</span>
+            `;
+        } else {
+            kbButton.innerHTML = `
+                <i class="fas fa-database"></i>
+                <span>Save to KB</span>
+            `;
+        }
     }
 }
 
@@ -681,7 +748,36 @@ function updateFileList(subjectId, data) {
     // Update pagination
     updatePagination(subjectId, data.totalPages, data.currentPage);
 }
+// Add the rename function
+async function renameFile(fileId, currentName) {
+    const newName = prompt('Enter new filename:', currentName);
+    if (!newName || newName === currentName) return;
 
+    try {
+        const response = await fetch(`/professor/drive/files/${fileId}/rename`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ new_name: newName })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to rename file');
+        }
+
+        // Refresh the file list
+        const subjectSection = document.querySelector(`[data-subject-id]`);
+        const subjectId = subjectSection.getAttribute('data-subject-id');
+        await loadDriveFiles(subjectId);
+
+    } catch (error) {
+        console.error('Error renaming file:', error);
+        alert('Failed to rename file: ' + error.message);
+    }
+}
+// Add this to your file item creation function
 function createFileItem(file, subjectId, viewType) {
     const fileIcon = getFileIcon(file.mimeType);
     const fileSize = formatFileSize(file.size);
@@ -692,14 +788,22 @@ function createFileItem(file, subjectId, viewType) {
             <div class="file-item" id="file-${file.id}">
                 <img src="${fileIcon}" alt="${file.mimeType}" class="file-icon">
                 <div class="file-info">
-                    <div class="file-name" title="${file.name}">${file.name}</div>
+                    <div class="file-name">
+    <span class="filename-text">${file.name}</span>
+    <button onclick="renameFile('${file.id}', '${file.name}')" class="rename-btn" title="Rename">
+        <i class="fas fa-edit"></i>
+    </button>
+</div>
                     <div class="file-meta">${fileSize} • ${modifiedDate}</div>
                 </div>
                 <div class="file-actions">
-                    <button onclick="previewFile('${file.id}')" class="btn btn-sm btn-primary">
+                    <button onclick="previewFile('${file.id}')" class="btn btn-preview" title="Preview">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-sm btn-danger">
+                    <button onclick="openDriveFile('${file.id}')" class="btn btn-open" title="Open in Drive">
+                        <i class="fas fa-external-link-alt"></i>
+                    </button>
+                    <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-remove" title="Remove">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -709,15 +813,28 @@ function createFileItem(file, subjectId, viewType) {
     
     return `
         <div class="file-item" id="file-${file.id}">
-            <img src="${fileIcon}" alt="${file.mimeType}" class="file-icon">
-            <div class="file-info">
-                <div class="file-name">${file.name}</div>
-                <div class="file-meta">${fileSize} • ${modifiedDate}</div>
+            <div class="file-main">
+                <img src="${fileIcon}" alt="${file.mimeType}" class="file-icon">
+                <div class="file-info">
+                    <div class="file-name">
+    <span class="filename-text">${file.name}</span>
+    <button onclick="renameFile('${file.id}', '${file.name}')" class="rename-btn" title="Rename">
+        <i class="fas fa-edit"></i>
+    </button>
+</div>
+                    <div class="file-meta">${fileSize} • ${modifiedDate}</div>
+                </div>
             </div>
             <div class="file-actions">
-                <button onclick="previewFile('${file.id}')" class="btn btn-sm btn-primary">Preview</button>
-                <button onclick="openDriveFile('${file.id}')" class="btn btn-sm btn-primary">Open</button>
-                <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-sm btn-danger">Remove</button>
+                <button onclick="previewFile('${file.id}')" class="btn btn-preview" title="Preview">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button onclick="openDriveFile('${file.id}')" class="btn btn-open" title="Open in Drive">
+                    <i class="fas fa-external-link-alt"></i>
+                </button>
+                <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-remove" title="Remove">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     `;
@@ -851,6 +968,19 @@ function updateKnowledgeBaseButton(subjectId, fileCount = 0) {
         const hasFiles = fileCount > 0;
         kbButton.disabled = !hasFiles;
         kbButton.classList.toggle('disabled', !hasFiles);
+        
+        // Update button content based on file status
+        if (!hasFiles) {
+            kbButton.innerHTML = `
+                <i class="fas fa-database"></i>
+                <span>No Files to Process</span>
+            `;
+        } else {
+            kbButton.innerHTML = `
+                <i class="fas fa-database"></i>
+                <span>Update Knowledge Base</span>
+            `;
+        }
     }
 }
 

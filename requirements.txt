@@ -5,3 +5,8 @@ requests
 unstructured[pdf,md]
 faiss-cpu
 sentence-transformers
+python-magic
+python-magic-bin; sys_platform == 'win32'
+unstructured[docx]
+unstructured[pdf]
+unstructured[all]

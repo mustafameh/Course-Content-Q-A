@@ -555,13 +555,9 @@ body {
     min-width: 0;
 }
 
-.file-name {
-    font-weight: 500;
-    margin-bottom: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
+
+
+
 
 .file-meta {
     font-size: 0.8em;
@@ -793,4 +789,465 @@ textarea.input-field {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Knowledge Base Button States */
+.btn-success.loading {
+    position: relative;
+    background-color: #2ecc71;
+    cursor: not-allowed;
+}
+
+.btn-success.loading .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-success.success {
+    background-color: #27ae60;
+}
+
+.btn-success.error {
+    background-color: #e74c3c;
+}
+
+.btn-success.disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.btn-success i {
+    margin-right: 8px;
+}
+
+/* Animation for status changes */
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.btn-success.success,
+.btn-success.error {
+    animation: fadeInOut 3s ease-in-out;
+}
+
+/* Hover effects */
+.btn-success:not(.disabled):not(.loading):hover {
+    background-color: #25a25a;
+}
+
+.btn-success.loading:hover {
+    background-color: #2ecc71;
+    cursor: not-allowed;
+}
+
+/* Status message styling */
+.btn-success span {
+    margin-left: 8px;
+    font-size: 14px;
+}
+
+
+
+
+
+
+
+.file-item:hover .rename-btn {
+    opacity: 1;
+}
+
+.rename-btn:hover {
+    background-color: #e9ecef;
+}
+
+/* Common button styles */
+.file-actions .btn, 
+.subject-actions .btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    border: none;
+    margin: 0 4px;
+}
+
+/* File action buttons */
+.file-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.file-item:hover .file-actions {
+    opacity: 1;
+}
+
+.btn-preview {
+    background-color: #f8f9fa;
+    color: #1a73e8;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-preview:hover {
+    background-color: #e8f0fe;
+}
+
+.btn-open {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.btn-open:hover {
+    background-color: #1557b0;
+}
+
+.btn-remove {
+    background-color: #f8f9fa;
+    color: #dc3545;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-remove:hover {
+    background-color: #fff1f0;
+}
+
+/* Subject action buttons */
+.subject-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-drive {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.btn-sync {
+    background-color: #f8f9fa;
+    color: #1a73e8;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-kb {
+    background-color: #34a853;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #f8f9fa;
+    color: #dc3545;
+    border: 1px solid #e0e0e0;
+}
+
+/* File Item Styles */
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+}
+
+.file-item:hover {
+    background-color: #f8f9fa;
+}
+
+.file-main {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
+
+.file-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+
+
+
+.file-meta {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Button Styles */
+.file-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.file-item:hover .file-actions {
+    opacity: 1;
+}
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-preview {
+    background-color: #f8f9fa;
+    color: #1a73e8;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-preview:hover {
+    background-color: #e8f0fe;
+}
+
+.btn-open {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.btn-open:hover {
+    background-color: #1557b0;
+}
+
+.btn-remove {
+    background-color: #f8f9fa;
+    color: #dc3545;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-remove:hover {
+    background-color: #fff1f0;
+}
+
+
+.file-item:hover .rename-btn {
+    opacity: 1;
+}
+
+.rename-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #e0e0e0;
+}
+
+/* Grid View Styles */
+.file-list[data-view="grid"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 16px;
+}
+
+.file-list[data-view="grid"] .file-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.file-list[data-view="grid"] .file-icon {
+    width: 48px;
+    height: 48px;
+    margin-right: 0;
+    margin-bottom: 12px;
+}
+
+.file-list[data-view="grid"] .file-info {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.file-list[data-view="grid"] .file-actions {
+    justify-content: center;
+}
+
+/* Tooltip styles */
+[title] {
+    position: relative;
+}
+
+[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    background-color: rgba(0,0,0,0.8);
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Subject Actions */
+.subject-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    flex-wrap: wrap;
+}
+
+.subject-actions .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-drive {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.btn-drive:hover {
+    background-color: #1557b0;
+}
+
+.btn-sync {
+    background-color: #f8f9fa;
+    color: #1a73e8;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-sync:hover {
+    background-color: #e8f0fe;
+}
+
+.btn-kb {
+    background-color: #34a853;
+    color: white;
+}
+
+.btn-kb:hover {
+    background-color: #2d8d47;
+}
+
+.btn-kb.disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
+.btn-delete {
+    background-color: #f8f9fa;
+    color: #dc3545;
+    border: 1px solid #e0e0e0;
+}
+
+.btn-delete:hover {
+    background-color: #fff1f0;
+}
+
+/* Loading state for KB button */
+.btn-kb.loading {
+    position: relative;
+    cursor: not-allowed;
+}
+
+.btn-kb.loading .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* File name and rename button styles */
+.file-name {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    position: relative;
+    padding-right: 30px; /* Space for rename button */
+}
+
+.filename-text {
+    font-weight: 500;
+    color: #1f1f1f;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.rename-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    background-color: transparent;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.file-item:hover .rename-btn {
+    opacity: 1;
+}
+
+.rename-btn:hover {
+    background-color: #e9ecef;
+    color: #1a73e8;
+}
+
+.rename-btn i {
+    font-size: 14px;
 }

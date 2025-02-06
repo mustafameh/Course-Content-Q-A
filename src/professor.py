@@ -116,7 +116,7 @@ from src.document_loader import SubjectDocumentLoader
 @login_required
 @professor_required
 def create_subject_knowledge_base(subject_id):
-    """Create or update knowledge base for a subject"""
+    """Sync files and create/update knowledge base for a subject"""
     db = next(get_db())
     try:
         # Verify subject belongs to professor
@@ -127,6 +127,27 @@ def create_subject_knowledge_base(subject_id):
 
         if not subject:
             return jsonify({"error": "Subject not found or unauthorized"}), 404
+
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+
+        # Initialize Drive service and sync files
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Sync files first
+        drive_service.sync_folder(subject.drive_folder_id)
+        
+        # Update last synced time
+        drive_creds.last_synced = datetime.utcnow()
+        db.commit()
 
         # Load documents
         document_loader = SubjectDocumentLoader()
@@ -147,16 +168,15 @@ def create_subject_knowledge_base(subject_id):
         )
 
         return jsonify({
-            "message": "Knowledge base created successfully",
+            "message": "Files synced and knowledge base updated successfully",
             "document_count": len(documents)
         })
 
     except Exception as e:
-        print(f"Error creating knowledge base: {str(e)}")
-        return jsonify({"error": f"Failed to create knowledge base: {str(e)}"}), 500
+        print(f"Error updating knowledge base: {str(e)}")
+        return jsonify({"error": f"Failed to update: {str(e)}"}), 500
     finally:
         db.close()
-
 @professor_bp.route('/subjects/<int:subject_id>/knowledge-base', methods=['GET'])
 @login_required
 @professor_required
@@ -848,5 +868,53 @@ def update_drive_subject(subject_id):
     except Exception as e:
         db.rollback()
         return jsonify({"error": f"Failed to update subject: {str(e)}"}), 500
+    finally:
+        db.close()
+        
+@professor_bp.route('/drive/files/<file_id>/rename', methods=['PUT'])
+@login_required
+@professor_required
+def rename_drive_file(file_id):
+    """Rename a file in Google Drive"""
+    data = request.get_json()
+    if not data or 'new_name' not in data:
+        return jsonify({"error": "New filename is required"}), 400
+
+    new_name = secure_filename(data['new_name'])
+    if not new_name:
+        return jsonify({"error": "Invalid filename"}), 400
+
+    db = next(get_db())
+    try:
+        # Get Drive credentials
+        drive_creds = db.query(GoogleDriveCredentials).filter_by(
+            professor_id=current_user.id,
+            is_active=True
+        ).first()
+        
+        if not drive_creds:
+            return jsonify({"error": "Drive not connected"}), 403
+            
+        # Initialize Drive service
+        google_auth = GoogleDriveAuth()
+        credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+        drive_service = GoogleDriveService(credentials)
+        
+        # Rename file
+        updated_file = drive_service.rename_file(file_id, new_name)
+        
+        return jsonify({
+            "message": "File renamed successfully",
+            "file": {
+                "id": updated_file.get('id'),
+                "name": updated_file.get('name'),
+                "mimeType": updated_file.get('mimeType'),
+                "modifiedTime": updated_file.get('modifiedTime')
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error renaming file: {str(e)}")
+        return jsonify({"error": "Failed to rename file"}), 500
     finally:
         db.close()

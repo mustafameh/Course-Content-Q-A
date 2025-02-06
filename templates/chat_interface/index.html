@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CourseCompanion - Your 24/7 Course Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='chat_interface/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>CourseCompanion</h1>
+                <p class="subtitle">Your 24/7 Course Assistant</p>
+            </div>
+
+            <div class="subject-selector">
+                <select id="subject-select" onchange="initializeChat()">
+                    <option value="">Select a subject</option>
+                </select>
+            </div>
+            
+            <div class="chat-messages" id="chat-container">
+                <!-- Messages will be added here -->
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="message-input" placeholder="Ask your question..." disabled>
+                <button onclick="sendMessage()" id="send-button" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <div class="controls">
+                <button onclick="resetChat()" id="reset-button" disabled>
+                    <i class="fas fa-redo"></i> Reset Chat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='chat_interface/script.js') }}"></script>
+</body>
+</html>

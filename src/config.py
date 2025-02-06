@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "google/palm-2-chat-bison"
     
     # For Vector base creation
-    CHUNK_SIZE: int = 1000
+    CHUNK_SIZE: int = 2000
     CHUNK_OVERLAP: int = 200
     
     # For vector search
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     
     # for chat history 
     MAX_HISTORY_LENGTH: int = 10  # Keep last 10 exchanges
-    MAX_HISTORY_TOKENS: int = 3000  # Truncate if over
+    MAX_HISTORY_TOKENS: int = 4000  # Truncate if over
     
     
     

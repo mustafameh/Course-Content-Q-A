@@ -408,4 +408,18 @@ class GoogleDriveService:
         except HttpError as error:
             print(f'Error updating folder name: {error}')
             raise
+    
+    def rename_file(self, file_id, new_name):
+        """Rename a file in Google Drive"""
+        try:
+            file_metadata = {'name': new_name}
+            updated_file = self.service.files().update(
+                fileId=file_id,
+                body=file_metadata,
+                fields='id, name, mimeType, modifiedTime'
+            ).execute()
+            return updated_file
+        except Exception as e:
+            print(f"Error renaming file in Drive: {str(e)}")
+            raise
             

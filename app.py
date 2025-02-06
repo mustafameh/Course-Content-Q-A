@@ -46,7 +46,7 @@ app.register_blueprint(chat_bp)
 # Add this route
 @app.route('/chat')
 def chat():
-    return render_template('chat.html')
+    return render_template('chat_interface/index.html')
 
 @app.route('/register')
 def register():
