@@ -40,5 +40,29 @@
     </div>
 
     <script src="{{ url_for('static', filename='chat_interface/script.js') }}"></script>
+
+
+
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="feedback-modal">
+            <div class="modal-header">
+                <h3>Submit Question for Review</h3>
+                <p>Would you like this question to be reviewed by the professor for a more detailed answer?</p>
+            </div>
+            <div class="modal-content">
+                <div class="question-edit">
+                    <label>Your Question:</label>
+                    <textarea class="feedback-textarea" id="questionForReview" placeholder="Edit your question if needed"></textarea>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button cancel-button" onclick="courseCompanion.closeFeedbackModal()">Cancel</button>
+                <button class="modal-button submit-button" onclick="courseCompanion.submitFeedback()">Submit for Review</button>
+            </div>
+        </div>
+    </div>
+
+
+
 </body>
 </html>

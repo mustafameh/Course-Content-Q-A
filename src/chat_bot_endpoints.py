@@ -148,3 +148,23 @@ def reset_chat(subject_id):
         session[session_key] = []
     
     return jsonify({"message": "Chat history reset successfully"})
+
+
+@chat_bp.route('/feedback/<int:subject_id>', methods=['POST'])
+def submit_feedback(subject_id):
+    """Handle feedback submission"""
+    try:
+        data = request.get_json()
+        
+        # Here you would typically store the feedback in your database
+        # For now, we'll just log it
+        print(f"Question submitted for review - Subject {subject_id}:")
+        print(f"Original Question: {data['originalQuestion']}")
+        print(f"Question for Review: {data['questionForReview']}")
+        print(f"Bot Response: {data['botResponse']}")
+        
+        # TODO: Add your database storage logic here
+        
+        return jsonify({"message": "Question received for review successfully"})
+    except Exception as e:
+        return jsonify({"error": f"Failed to process submission: {str(e)}"}), 500

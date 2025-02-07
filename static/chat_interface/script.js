@@ -1,8 +1,14 @@
 class CourseCompanion {
+
+
+
+
     constructor() {
         this.currentSubjectId = null;
         this.initializeElements();
         this.addEventListeners();
+        this.conversation_history = []; // Add this line
+        this.currentFeedbackContext = null; // Add this line
     }
 
     initializeElements() {
@@ -47,7 +53,7 @@ class CourseCompanion {
     async initializeChat() {
         const subjectId = this.elements.subjectSelect.value;
         if (!subjectId) return;
-
+    
         try {
             const response = await fetch(`/chat/initialize/${subjectId}`, {
                 method: 'POST'
@@ -56,6 +62,7 @@ class CourseCompanion {
             if (!response.ok) throw new Error('Failed to initialize chat');
             
             this.currentSubjectId = subjectId;
+            this.conversation_history = []; // Reset conversation history
             this.enableChat();
             this.clearChat();
             await this.loadChatHistory();
@@ -94,6 +101,13 @@ class CourseCompanion {
             // Remove typing indicator before showing the response
             this.removeTypingIndicator();
             this.addMessage(data.response, 'bot');
+
+            this.conversation_history.push({
+                question: message,
+                response: data.response
+            });
+
+
         } catch (error) {
             console.error('Error sending message:', error);
             this.removeTypingIndicator();
@@ -123,6 +137,7 @@ class CourseCompanion {
             const data = await response.json();
             
             this.clearChat();
+            this.conversation_history = data.history; // Update conversation history
             data.history.forEach(item => {
                 this.addMessage(item.question, 'user');
                 this.addMessage(item.response, 'bot');
@@ -137,15 +152,30 @@ class CourseCompanion {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${type}-message`;
         
-        if (type === 'bot' && text.includes('\n\nSources:')) {
-            const [message, sources] = text.split('\n\nSources:');
-            messageDiv.textContent = message;
+        if (type === 'bot') {
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
             
-            const sourcesDiv = document.createElement('div');
-            sourcesDiv.className = 'source';
-            // Update the text here to say "Sources Searched: " instead of "Sources: "
-            sourcesDiv.textContent = 'Sources Searched: ' + sources;
-            messageDiv.appendChild(sourcesDiv);
+            if (text.includes('\n\nSources:')) {
+                const [message, sources] = text.split('\n\nSources:');
+                messageContent.textContent = message;
+                
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'source';
+                sourcesDiv.textContent = 'Sources Searched: ' + sources;
+                messageContent.appendChild(sourcesDiv);
+            } else {
+                messageContent.textContent = text;
+            }
+
+            // Add feedback button
+            const feedbackButton = document.createElement('span');
+            feedbackButton.className = 'feedback-button';
+            feedbackButton.innerHTML = '<i class="fas fa-thumbs-down"></i>';
+            feedbackButton.onclick = () => this.showFeedbackModal(text);
+            
+            messageDiv.appendChild(messageContent);
+            messageDiv.appendChild(feedbackButton);
         } else {
             messageDiv.textContent = text;
         }
@@ -205,9 +235,61 @@ class CourseCompanion {
             indicator.remove();
         }
     }
+    showFeedbackModal(botResponse) {
+        const modal = document.getElementById('feedbackModal');
+        const questionInput = document.getElementById('questionForReview');
+    
+        // Get the last question from conversation history
+        const lastExchange = this.conversation_history[this.conversation_history.length - 1];
+        const lastQuestion = lastExchange ? lastExchange.question : '';
+        
+        // Pre-fill the question
+        questionInput.value = lastQuestion;
+        
+        this.currentFeedbackContext = {
+            originalQuestion: lastQuestion,
+            botResponse: botResponse
+        };
+    
+        modal.style.display = 'flex';
+    }
 
+    closeFeedbackModal() {
+        const modal = document.getElementById('feedbackModal');
+        modal.style.display = 'none';
+    }
 
+    async submitFeedback() {
+        const questionForReview = document.getElementById('questionForReview').value;
+        
+        try {
+            const response = await fetch(`/chat/feedback/${this.currentSubjectId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    originalQuestion: this.currentFeedbackContext.originalQuestion,
+                    questionForReview: questionForReview,
+                    botResponse: this.currentFeedbackContext.botResponse
+                })
+            });
+    
+            if (!response.ok) throw new Error('Failed to submit feedback');
+    
+            this.addSystemMessage('Thank you! Your question has been submitted for review.');
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            this.showError('Failed to submit question for review. Please try again.');
+        } finally {
+            this.closeFeedbackModal();
+        }
+    }
 }
+
+
+    
+
 
 // Initialize the CourseCompanion
 const courseCompanion = new CourseCompanion();
@@ -216,3 +298,6 @@ const courseCompanion = new CourseCompanion();
 window.initializeChat = () => courseCompanion.initializeChat();
 window.sendMessage = () => courseCompanion.sendMessage();
 window.resetChat = () => courseCompanion.resetChat();
+
+window.submitFeedback = () => courseCompanion.submitFeedback();
+
