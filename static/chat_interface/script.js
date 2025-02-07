@@ -70,11 +70,15 @@ class CourseCompanion {
     async sendMessage() {
         const message = this.elements.messageInput.value.trim();
         if (!message) return;
-
+    
         this.elements.messageInput.value = '';
         this.addMessage(message, 'user');
         this.elements.sendButton.disabled = true;
-
+        this.elements.messageInput.disabled = true; // Disable input while processing
+    
+        // Show typing indicator
+        this.showTypingIndicator();
+    
         try {
             const response = await fetch(`/chat/query/${this.currentSubjectId}`, {
                 method: 'POST',
@@ -87,12 +91,16 @@ class CourseCompanion {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to get response');
             
+            // Remove typing indicator before showing the response
+            this.removeTypingIndicator();
             this.addMessage(data.response, 'bot');
         } catch (error) {
             console.error('Error sending message:', error);
+            this.removeTypingIndicator();
             this.showError('Failed to get response. Please try again.');
         } finally {
             this.elements.sendButton.disabled = false;
+            this.elements.messageInput.disabled = false; // Re-enable input
         }
     }
 
@@ -135,7 +143,8 @@ class CourseCompanion {
             
             const sourcesDiv = document.createElement('div');
             sourcesDiv.className = 'source';
-            sourcesDiv.textContent = 'Sources: ' + sources;
+            // Update the text here to say "Sources Searched: " instead of "Sources: "
+            sourcesDiv.textContent = 'Sources Searched: ' + sources;
             messageDiv.appendChild(sourcesDiv);
         } else {
             messageDiv.textContent = text;
@@ -174,6 +183,30 @@ class CourseCompanion {
     scrollToBottom() {
         this.elements.chatContainer.scrollTop = this.elements.chatContainer.scrollHeight;
     }
+
+
+
+    showTypingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'typing-indicator';
+        indicator.innerHTML = `
+            <span></span>
+            <span></span>
+            <span></span>
+        `;
+        indicator.id = 'typing-indicator';
+        this.elements.chatContainer.appendChild(indicator);
+        this.scrollToBottom();
+    }
+    
+    removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+
 }
 
 // Initialize the CourseCompanion
