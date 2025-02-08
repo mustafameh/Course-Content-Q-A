@@ -49,7 +49,7 @@
                     </div>
                     
                     <div id="drive-connect-btn-container">
-                        <button onclick="connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
+                        <button onclick="DriveService.connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
                             <i class="fab fa-google"></i> Connect Drive
                         </button>
                     </div>
@@ -106,6 +106,8 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='professor_dashboard/script.js') }}"></script>
+    <!-- At the bottom of your body tag -->
+<script src="{{ url_for('static', filename='professor_dashboard/drive-service.js') }}"></script>
+<script src="{{ url_for('static', filename='professor_dashboard/script.js') }}"></script>
 </body>
 </html>

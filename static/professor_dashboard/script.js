@@ -1,7 +1,8 @@
-// Global state management
 const state = {
     currentSubjectId: null,
-    isDriveConnected: false
+    get isDriveConnected() {
+        return DriveService.isDriveConnected;
+    }
 };
 
 // Event Listeners
@@ -23,11 +24,12 @@ window.onclick = function(event) {
 };
 
 // Initialization
+// Update the initialization to use DriveService
 async function initializeDashboard() {
     await Promise.all([
         loadProfessorProfile(),
         loadSubjects(),
-        loadGoogleDriveStatus()
+        DriveService.loadGoogleDriveStatus()
     ]);
 }
 
@@ -58,46 +60,6 @@ function handleProfileError() {
 }
 
 // Google Drive Integration
-
-async function connectGoogleDrive() {
-    try {
-        const response = await fetch('/professor/google/auth/start');
-        const data = await response.json();
-        
-        if (data.auth_url) {
-            openGoogleAuthWindow(data.auth_url);
-            startConnectionCheck();
-        }
-    } catch (error) {
-        console.error('Error starting Google auth:', error);
-        alert('Failed to connect to Google Drive');
-    }
-}
-
-function openGoogleAuthWindow(authUrl) {
-    const width = 600;
-    const height = 700;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-    
-    window.open(
-        authUrl,
-        'Connect Google Drive',
-        `width=${width},height=${height},top=${top},left=${left}`
-    );
-}
-
-function startConnectionCheck() {
-    const checkInterval = setInterval(async () => {
-        const statusResponse = await fetch('/professor/google/status');
-        const statusData = await statusResponse.json();
-        
-        if (statusData.connected) {
-            clearInterval(checkInterval);
-            loadGoogleDriveStatus();
-        }
-    }, 2000);
-}
 
 
 
@@ -195,7 +157,7 @@ function createSubjectSection(subject) {
 
     const actionsContent = `
     <div class="subject-actions">
-        <button onclick="openDriveFolder('${subject.drive_folder_id}')" class="btn btn-drive" title="Open in Google Drive">
+        <button onclick="DriveService.openDriveFolder('${subject.drive_folder_id}')" class="btn btn-drive" title="Open in Google Drive">
             <i class="fab fa-google-drive"></i> Drive
         </button>
         <button onclick="updateKnowledgeBase(${subject.id})" 
@@ -208,7 +170,7 @@ function createSubjectSection(subject) {
             <i class="fas fa-trash"></i> Delete
         </button>
     </div>
-`;
+    `;
 
     section.innerHTML = `
         ${headerContent}
@@ -483,14 +445,6 @@ async function deleteDriveFile(fileId, subjectId) {
     }
 }
 
-// Drive Operations
-function openDriveFolder(folderId) {
-    window.open(`https://drive.google.com/drive/folders/${folderId}`, '_blank');
-}
-
-function openDriveFile(fileId) {
-    window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank');
-}
 
 async function syncDriveFiles(subjectId) {
     try {
@@ -1000,50 +954,8 @@ function updateKnowledgeBaseButton(subjectId, fileCount = 0) {
 // Add this to your script.js
 window.addEventListener('message', function(event) {
     if (event.data === 'google-drive-connected') {
-        // Refresh Drive status
-        loadGoogleDriveStatus();
-        // Reload subjects
+        DriveService.loadGoogleDriveStatus();
         loadSubjects();
     }
 });
 
-async function loadGoogleDriveStatus() {
-    try {
-        const response = await fetch('/professor/google/status');
-        const data = await response.json();
-        state.isDriveConnected = data.connected;
-        updateDriveStatus(data.connected);
-        updateDriveUI();
-    } catch (error) {
-        console.error('Error loading Drive status:', error);
-        updateDriveStatus(false);
-    }
-}
-
-function updateDriveStatus(connected) {
-    const statusIndicator = document.getElementById('drive-status-indicator');
-    const statusText = document.getElementById('drive-status-text');
-    const connectBtn = document.getElementById('connect-drive-btn');
-    const statusElement = document.getElementById('drive-connection-status');
-
-    if (connected) {
-        statusIndicator.className = 'status-indicator status-connected';
-        statusText.textContent = 'Connected';
-        connectBtn.style.display = 'none';
-        //statusElement.className = 'drive-status connected';
-        //statusElement.textContent = 'Drive: Connected';
-    } else {
-        statusIndicator.className = 'status-indicator status-disconnected';
-        statusText.textContent = 'Not Connected';
-        connectBtn.style.display = 'block';
-        //statusElement.className = 'drive-status disconnected';
-        //statusElement.textContent = 'Drive: Not Connected';
-    }
-}
-
-function updateDriveUI() {
-    const createSubjectBtn = document.querySelector('.create-subject-btn');
-    if (createSubjectBtn) {
-        createSubjectBtn.disabled = !state.isDriveConnected;
-    }
-}
