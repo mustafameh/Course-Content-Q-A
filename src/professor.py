@@ -8,9 +8,9 @@ from sqlalchemy.orm import joinedload
 from datetime import datetime
 from src.google_drive.auth import GoogleDriveAuth
 from src.google_drive.drive_service import GoogleDriveService
+from src.decorators import professor_required
 
 professor_bp = Blueprint('professor', __name__, url_prefix='/professor')
-
 def professor_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

@@ -1273,3 +1273,112 @@ textarea.input-field {
 .file-item.system-file:hover {
     background-color: rgba(var(--accent-color-rgb), 0.15);
 }
+
+/* FAQ Tab Styles */
+.subject-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    position: relative;
+}
+
+.tab-btn.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+.pending-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.faq-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.faq-filters {
+    display: flex;
+    gap: 10px;
+}
+
+.faq-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    padding: 15px;
+}
+
+.faq-item.pending {
+    border-left: 4px solid #ffc107;
+}
+
+.faq-question {
+    margin-bottom: 10px;
+}
+
+.question-number {
+    font-weight: bold;
+    color: #666;
+    margin-right: 10px;
+}
+
+.question-date {
+    font-size: 12px;
+    color: #666;
+    margin-left: 10px;
+}
+
+.question-input,
+.answer-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 5px 0;
+    min-height: 60px;
+    resize: vertical;
+}
+
+.answer-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.answer-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.no-questions {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}

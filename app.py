@@ -37,6 +37,11 @@ from src.chat_bot_endpoints import chat_bp
 # Add these with your other blueprint registrations
 app.register_blueprint(chat_bp)
 
+from src.faq_routes import faq_bp
+
+# Add this with your other blueprint registrations
+app.register_blueprint(faq_bp)
+
 # Add this route
 @app.route('/chat')
 def chat():

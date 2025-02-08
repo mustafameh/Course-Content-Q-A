@@ -327,43 +327,43 @@ class GoogleDriveService:
         except HttpError:
             return False
         
-    def download_file(self, file_id: str, destination_path: str):
-        """Download a file from Drive to local path"""
+    def download_file(self, file_id):
+        """Download a file's content"""
         try:
             request = self.service.files().get_media(fileId=file_id)
-            with open(destination_path, 'wb') as f:
-                downloader = MediaIoBaseDownload(f, request)
-                done = False
-                while done is False:
-                    status, done = downloader.next_chunk()
-                    
-        except HttpError as error:
-            print(f'Error downloading file: {error}')
+            file_content = request.execute()
+            
+            # For text files (like CSV), decode the content
+            if isinstance(file_content, bytes):
+                return file_content.decode('utf-8')
+            return file_content
+            
+        except Exception as e:
+            print(f"Error downloading file: {str(e)}")
             raise
 
-    def update_file_metadata(self, file_id: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Update file metadata (name, description, etc.)
-        
-        Args:
-            file_id: Drive file ID
-            metadata: New metadata
-            
-        Returns:
-            dict: Updated file information
-        """
+    def update_file(self, file_id, content):
+        """Update a file's content"""
         try:
-            updated_file = self.service.files().update(
+            # Convert string content to bytes if necessary
+            if isinstance(content, str):
+                content = content.encode('utf-8')
+                
+            # Create a MediaIoBaseUpload object
+            from googleapiclient.http import MediaIoBaseUpload
+            from io import BytesIO
+            
+            fh = BytesIO(content)
+            media = MediaIoBaseUpload(fh, mimetype='text/csv', resumable=True)
+            
+            # Update the file
+            self.service.files().update(
                 fileId=file_id,
-                body=metadata,
-                fields='id, name, mimeType, size, modifiedTime',
-                supportsAllDrives=True
+                media_body=media
             ).execute()
             
-            return updated_file
-            
-        except HttpError as error:
-            print(f'Error updating file metadata: {error}')
+        except Exception as e:
+            print(f"Error updating file: {str(e)}")
             raise
     
     def create_root_folder(self, professor_email: str) -> str:
