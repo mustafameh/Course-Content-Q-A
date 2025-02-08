@@ -63,7 +63,7 @@
 
         <div class="main-content">
             <div class="drive-header">
-                <button onclick="showCreateSubjectModal()" class="create-subject-btn">
+                <button onclick="ModalService.showCreateSubjectModal()" class="create-subject-btn">
                     <div class="btn-content">
                         <div class="btn-icon">
                             <i class="fas fa-plus-circle"></i>
@@ -87,7 +87,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Create New Subject</h2>
-                <span class="close" onclick="closeModal('create-subject-modal')">
+                <span class="close" onclick="ModalService.closeModal('create-subject-modal')">
                     <i class="fas fa-times"></i>
                 </span>
             </div>
@@ -99,15 +99,18 @@
                 <div id="subject-error" class="error-text" style="display: none;"></div>
             </div>
             <div class="modal-footer">
-                <button onclick="createDriveSubject()" class="btn btn-primary">
+                <button onclick="SubjectService.createDriveSubject()" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Create Subject
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- At the bottom of your body tag -->
-<script src="{{ url_for('static', filename='professor_dashboard/drive-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/drive-service.js') }}"></script>
+<script src="{{ url_for('static', filename='professor_dashboard/modal-service.js') }}"></script>
+<script src="{{ url_for('static', filename='professor_dashboard/file-service.js') }}"></script>
+<script src="{{ url_for('static', filename='professor_dashboard/subject-service.js') }}"></script>
+<script src="{{ url_for('static', filename='professor_dashboard/knowledge-base-service.js') }}"></script>
 <script src="{{ url_for('static', filename='professor_dashboard/script.js') }}"></script>
 </body>
 </html>
