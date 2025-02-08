@@ -124,18 +124,7 @@ class GoogleDriveService:
         page: int = 1, 
         page_size: int = 10
     ) -> Tuple[List[Dict[str, Any]], int]:
-        """
-        List files in a folder with pagination and search
-        
-        Args:
-            folder_id: Drive folder ID
-            search_term: Optional search term
-            page: Page number
-            page_size: Items per page
-            
-        Returns:
-            tuple: (list of files, total count)
-        """
+        """List files in a folder with pagination and search"""
         try:
             # Build query
             query = f"'{folder_id}' in parents and trashed = false"
@@ -168,13 +157,15 @@ class GoogleDriveService:
             # Process files
             processed_files = []
             for file in files:
+                is_faq = file.get('name') == 'faq.csv'
                 processed_files.append({
                     'id': file.get('id'),
                     'name': file.get('name'),
                     'mimeType': file.get('mimeType'),
                     'size': int(file.get('size', 0)),
                     'modifiedTime': file.get('modifiedTime'),
-                    'thumbnailLink': file.get('thumbnailLink')
+                    'thumbnailLink': file.get('thumbnailLink'),
+                    'isSystemFile': is_faq  # Add this flag
                 })
             
             return processed_files, total_count
@@ -182,6 +173,10 @@ class GoogleDriveService:
         except HttpError as error:
             print(f'Error listing files: {error}')
             raise
+
+
+
+
 
     def get_file_info(self, file_id: str) -> Dict[str, Any]:
         """

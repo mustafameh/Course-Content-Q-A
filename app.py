@@ -30,12 +30,6 @@ app.register_blueprint(professor_bp)
 def home():
     return render_template('index.html')
 
-@app.route('/professor-dashboard')
-def professor_test():
-    template_path = os.path.join(current_app.template_folder, 'professor_dashboard', 'index.html')
-    print(f"Looking for template at: {template_path}")
-    return render_template('professor_dashboard/index.html')
-
 
 
 from src.chat_bot_endpoints import chat_bp

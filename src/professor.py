@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, redirect, url_for, request
+from flask import Blueprint, request, jsonify, session, redirect, url_for, request,  render_template, flash
 from flask_login import login_required, current_user
 from src.models import User, Subject, get_db, GoogleDriveCredentials
 from werkzeug.utils import secure_filename
@@ -11,14 +11,17 @@ from src.google_drive.drive_service import GoogleDriveService
 
 professor_bp = Blueprint('professor', __name__, url_prefix='/professor')
 
-# Custom decorator to check if user is a professor and approved
 def professor_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'professor':
-            return jsonify({"error": "Professor access required"}), 403
+        if not current_user.is_authenticated:
+            # Redirect to root URL which has the login form
+            return redirect(f'/?next={request.path}')
         
-        # Get fresh user object from database with relationships
+        if current_user.role != 'professor':
+            flash('This area is restricted to professors only.', 'error')
+            return redirect('/')
+        
         db = next(get_db())
         try:
             user = db.query(User).options(
@@ -26,7 +29,8 @@ def professor_required(f):
             ).get(current_user.id)
             
             if not (user.professor_profile and user.professor_profile.is_approved):
-                return jsonify({"error": "Your professor account is pending approval"}), 403
+                flash("Your professor account is pending approval", "warning")
+                return redirect('/')
                 
             return f(*args, **kwargs)
         finally:
@@ -34,7 +38,11 @@ def professor_required(f):
             
     return decorated_function
 
-
+@professor_bp.route('/dashboard')
+@login_required
+@professor_required
+def dashboard():
+    return render_template('professor_dashboard/index.html')
 
 
 @professor_bp.route('/subjects', methods=['POST'])
@@ -758,6 +766,13 @@ def delete_drive_file(file_id):
         credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
         drive_service = GoogleDriveService(credentials)
         
+        # Get file info first
+        file_info = drive_service.get_file_info(file_id)
+        if file_info.get('name') == 'faq.csv':
+            return jsonify({
+                "error": "Cannot delete system files"
+            }), 403
+        
         # Delete file
         drive_service.delete_file(file_id)
         
@@ -768,7 +783,8 @@ def delete_drive_file(file_id):
         return jsonify({"error": "Failed to delete file"}), 500
     finally:
         db.close()
-
+        
+        
 @professor_bp.route('/drive/subjects/<int:subject_id>/sync', methods=['POST'])
 @login_required
 @professor_required

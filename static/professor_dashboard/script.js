@@ -782,18 +782,22 @@ function createFileItem(file, subjectId, viewType) {
     const fileIcon = getFileIcon(file.mimeType);
     const fileSize = formatFileSize(file.size);
     const modifiedDate = new Date(file.modifiedTime).toLocaleDateString();
+    const isSystemFile = file.isSystemFile || file.name === 'faq.csv';
     
     if (viewType === 'grid') {
         return `
-            <div class="file-item" id="file-${file.id}">
+            <div class="file-item ${isSystemFile ? 'system-file' : ''}" id="file-${file.id}">
                 <img src="${fileIcon}" alt="${file.mimeType}" class="file-icon">
                 <div class="file-info">
                     <div class="file-name">
-    <span class="filename-text">${file.name}</span>
-    <button onclick="renameFile('${file.id}', '${file.name}')" class="rename-btn" title="Rename">
-        <i class="fas fa-edit"></i>
-    </button>
-</div>
+                        <span class="filename-text">${file.name}</span>
+                        ${isSystemFile ? '<span class="system-badge" title="This is a system file that cannot be deleted">System File</span>' : ''}
+                        ${!isSystemFile ? `
+                            <button onclick="renameFile('${file.id}', '${file.name}')" class="rename-btn" title="Rename">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        ` : ''}
+                    </div>
                     <div class="file-meta">${fileSize} • ${modifiedDate}</div>
                 </div>
                 <div class="file-actions">
@@ -803,25 +807,30 @@ function createFileItem(file, subjectId, viewType) {
                     <button onclick="openDriveFile('${file.id}')" class="btn btn-open" title="Open in Drive">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
-                    <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-remove" title="Remove">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    ${!isSystemFile ? `
+                        <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-remove" title="Remove">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
     }
     
     return `
-        <div class="file-item" id="file-${file.id}">
+        <div class="file-item ${isSystemFile ? 'system-file' : ''}" id="file-${file.id}">
             <div class="file-main">
                 <img src="${fileIcon}" alt="${file.mimeType}" class="file-icon">
                 <div class="file-info">
                     <div class="file-name">
-    <span class="filename-text">${file.name}</span>
-    <button onclick="renameFile('${file.id}', '${file.name}')" class="rename-btn" title="Rename">
-        <i class="fas fa-edit"></i>
-    </button>
-</div>
+                        <span class="filename-text">${file.name}</span>
+                        ${isSystemFile ? '<span class="system-badge" title="This is a system file that cannot be deleted">System File</span>' : ''}
+                        ${!isSystemFile ? `
+                            <button onclick="renameFile('${file.id}', '${file.name}')" class="rename-btn" title="Rename">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        ` : ''}
+                    </div>
                     <div class="file-meta">${fileSize} • ${modifiedDate}</div>
                 </div>
             </div>
@@ -832,13 +841,17 @@ function createFileItem(file, subjectId, viewType) {
                 <button onclick="openDriveFile('${file.id}')" class="btn btn-open" title="Open in Drive">
                     <i class="fas fa-external-link-alt"></i>
                 </button>
-                <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-remove" title="Remove">
-                    <i class="fas fa-trash"></i>
-                </button>
+                ${!isSystemFile ? `
+                    <button onclick="deleteDriveFile('${file.id}', ${subjectId})" class="btn btn-remove" title="Remove">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : ''}
             </div>
         </div>
     `;
 }
+
+
 
 function updatePagination(subjectId, totalPages, currentPage) {
     const pagination = document.getElementById(`pagination-${subjectId}`);

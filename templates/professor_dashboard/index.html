@@ -8,6 +8,18 @@
     <script src="{{ url_for('static', filename='professor_dashboard/sidebar.js') }}" defer></script>
 </head>
 <body>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                {{ message }}
+                <button onclick="this.parentElement.remove()" class="close-flash">×</button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
     <div class="dashboard">
         <div class="sidebar">
             <button class="sidebar-toggle">

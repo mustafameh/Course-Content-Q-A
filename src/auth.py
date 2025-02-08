@@ -14,7 +14,7 @@ login_manager = LoginManager()
 def configure_auth(app):
     """Initialize authentication system with Flask app"""
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'  # Set login view endpoint
+    login_manager.login_view = 'home'  # Set login view endpoint
 
 @login_manager.user_loader
 def load_user(user_id):
