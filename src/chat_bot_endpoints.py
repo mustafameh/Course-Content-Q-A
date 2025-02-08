@@ -7,6 +7,10 @@ from src.vector_store import VectorStore
 from src.chat_bot import ChatBot
 from contextlib import closing
 import os
+from src.models import GoogleDriveCredentials
+from src.google_drive.auth import GoogleDriveAuth
+from src.google_drive.drive_service import GoogleDriveService
+
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -148,23 +152,47 @@ def reset_chat(subject_id):
         session[session_key] = []
     
     return jsonify({"message": "Chat history reset successfully"})
-
-
+   
 @chat_bp.route('/feedback/<int:subject_id>', methods=['POST'])
 def submit_feedback(subject_id):
     """Handle feedback submission"""
     try:
         data = request.get_json()
         
-        # Here you would typically store the feedback in your database
-        # For now, we'll just log it
-        print(f"Question submitted for review - Subject {subject_id}:")
-        print(f"Original Question: {data['originalQuestion']}")
-        print(f"Question for Review: {data['questionForReview']}")
-        print(f"Bot Response: {data['botResponse']}")
-        
-        # TODO: Add your database storage logic here
-        
-        return jsonify({"message": "Question received for review successfully"})
+        db = next(get_db())
+        try:
+            # Get subject and verify it exists
+            subject = db.query(Subject).get(subject_id)
+            if not subject:
+                return jsonify({"error": "Subject not found"}), 404
+                
+            if not subject.faq_file_id:
+                return jsonify({"error": "FAQ system not initialized for this subject"}), 400
+                
+            # Get Drive credentials
+            drive_creds = db.query(GoogleDriveCredentials).filter_by(
+                professor_id=subject.professor_id,
+                is_active=True
+            ).first()
+            
+            if not drive_creds:
+                return jsonify({"error": "Drive not connected"}), 403
+                
+            # Initialize Drive service
+            google_auth = GoogleDriveAuth()
+            credentials = google_auth.get_credentials_from_token(drive_creds.token_info)
+            drive_service = GoogleDriveService(credentials)
+            
+            # Update FAQ file
+            drive_service.update_faq_file(
+                subject.faq_file_id,
+                data['questionForReview']
+            )
+            
+            return jsonify({"message": "Question submitted successfully"})
+            
+        finally:
+            db.close()
+            
     except Exception as e:
-        return jsonify({"error": f"Failed to process submission: {str(e)}"}), 500
+        return jsonify({"error": f"Failed to process feedback: {str(e)}"}), 500

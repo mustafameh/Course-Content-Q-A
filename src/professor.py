@@ -378,9 +378,6 @@ def get_google_status():
     finally:
         db.close()
         
-        
-
-# Add new Drive-integrated routes
 @professor_bp.route('/drive/subjects', methods=['POST'])
 @login_required
 @professor_required
@@ -428,6 +425,14 @@ def create_drive_subject():
                 "error": "Failed to create Drive folder for subject"
             }), 500
             
+        # Create FAQ file
+        try:
+            faq_file_id = drive_service.create_faq_file(folder_id)
+            new_subject.faq_file_id = faq_file_id  # Add this field to your Subject model
+        except Exception as e:
+            print(f"Error creating FAQ file: {e}")
+            # Continue even if FAQ file creation fails
+            
         # Update subject with folder info
         new_subject.drive_folder_id = folder_id
         new_subject.drive_folder_created = datetime.utcnow()
@@ -439,7 +444,8 @@ def create_drive_subject():
             "subject": {
                 "id": new_subject.id,
                 "name": new_subject.name,
-                "drive_folder_id": folder_id
+                "drive_folder_id": folder_id,
+                "faq_file_id": faq_file_id
             }
         }), 201
         
@@ -447,7 +453,8 @@ def create_drive_subject():
         db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        db.close()
+        db.close()       
+
 
 @professor_bp.route('/drive/subjects', methods=['GET'])
 @login_required

@@ -86,6 +86,7 @@ class Subject(Base):
     description = Column(String(500), nullable=True)  # Add this line
     professor_id = Column(Integer, ForeignKey('users.id'))
     drive_folder_id = Column(String(100))
+    faq_file_id = Column(String)
     
     drive_folder_created = Column(DateTime)
 

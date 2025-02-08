@@ -422,4 +422,96 @@ class GoogleDriveService:
         except Exception as e:
             print(f"Error renaming file in Drive: {str(e)}")
             raise
+        
+    def create_faq_file(self, folder_id: str) -> str:
+        """Create FAQ CSV file in the subject folder"""
+        try:
+            # Create CSV content with headers
+            csv_content = "number,question,answer,date_asked,date_answered\n"
             
+            # Create file metadata
+            file_metadata = {
+                'name': 'faq.csv',
+                'parents': [folder_id],
+                'mimeType': 'text/csv'
+            }
+            
+            # Create file stream
+            file_stream = io.BytesIO(csv_content.encode('utf-8'))
+            
+            # Upload file
+            media = MediaIoBaseUpload(
+                file_stream,
+                mimetype='text/csv',
+                resumable=True
+            )
+            
+            file = self.service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id',
+                supportsAllDrives=True
+            ).execute()
+            
+            return file.get('id')
+            
+        except HttpError as error:
+            print(f'Error creating FAQ file: {error}')
+            raise
+
+    def update_faq_file(self, file_id: str, new_question: str):
+        """Prepend a new question to the FAQ file"""
+        try:
+            # Download current content
+            request = self.service.files().get_media(fileId=file_id)
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                
+            # Get current content and decode
+            content = fh.getvalue().decode('utf-8')
+            
+            # Split into lines
+            lines = content.split('\n')
+            headers = lines[0]
+            existing_entries = lines[1:] if len(lines) > 1 else []
+            
+            # Get next number
+            next_number = 1
+            if existing_entries and existing_entries[0].strip():
+                try:
+                    next_number = int(existing_entries[0].split(',')[0]) + 1
+                except (IndexError, ValueError):
+                    pass
+            
+            # Create new entry
+            from datetime import datetime
+            current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            new_entry = f'{next_number},{new_question},,{current_date},'
+            
+            # Combine content
+            new_content = headers + '\n' + new_entry + '\n' + '\n'.join(filter(None, existing_entries))
+            
+            # Upload updated content
+            file_stream = io.BytesIO(new_content.encode('utf-8'))
+            media = MediaIoBaseUpload(
+                file_stream,
+                mimetype='text/csv',
+                resumable=True
+            )
+            
+            self.service.files().update(
+                fileId=file_id,
+                media_body=media,
+                supportsAllDrives=True
+            ).execute()
+            
+        except HttpError as error:
+            print(f'Error updating FAQ file: {error}')
+            raise
+            
+            
+        
+                
