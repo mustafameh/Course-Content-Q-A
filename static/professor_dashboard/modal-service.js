@@ -49,11 +49,13 @@ const ModalService = {
 
     showEditSubjectModal(subjectId) {
         const subjectSection = document.querySelector(`[data-subject-id="${subjectId}"]`);
-        const currentName = subjectSection.querySelector('.subject-title h3').textContent;
+        // Properly escape the values
+        const currentName = subjectSection.querySelector('.subject-title h3').textContent.trim().replace(/"/g, '&quot;');
         const descriptionElement = subjectSection.querySelector('.subject-description');
         const currentDescription = descriptionElement ? 
-            descriptionElement.textContent.trim() === 'No description' ? '' : descriptionElement.textContent : '';
-
+            (descriptionElement.textContent.trim() === 'No description' ? '' : 
+             descriptionElement.textContent.trim().replace(/"/g, '&quot;')) : '';
+    
         // Create edit modal
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -63,7 +65,7 @@ const ModalService = {
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>Edit Subject</h2>
-                    <span class="close" onclick="closeModal('edit-subject-modal')">&times;</span>
+                    <span class="close" onclick="ModalService.closeModal('edit-subject-modal')">&times;</span>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -82,10 +84,19 @@ const ModalService = {
                     <button onclick="SubjectService.updateSubject(${subjectId})" class="btn btn-primary">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
+                    <button onclick="ModalService.closeModal('edit-subject-modal')" class="btn btn-secondary">
+                        Cancel
+                    </button>
                 </div>
             </div>
         `;
-
+    
+        // Remove any existing modal
+        const existingModal = document.getElementById('edit-subject-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+    
         document.body.appendChild(modal);
         modal.style.display = 'block';
     }

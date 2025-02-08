@@ -38,6 +38,7 @@ const SubjectService = {
                 // Remove this line since we're loading files in createSubjectSection
                 // FileService.loadDriveFiles(subject.id);
             });
+            this.updateSidebarNavigation();
         } catch (error) {
             console.error('Error loading subjects:', error);
             alert('Failed to load subjects');
@@ -49,6 +50,8 @@ const SubjectService = {
         const section = document.createElement('div');
         section.className = 'subject-section drive-subject-section';
         section.setAttribute('data-subject-id', subject.id);
+        section.setAttribute('data-default-height', '750px'); // Store default height
+
 
         const headerContent = `
             <div class="subject-header">
@@ -148,8 +151,9 @@ const SubjectService = {
             ${fileListSection}
             ${faqSection}
             ${actionsContent}
+            <div class="resize-handle" title="Drag to resize (Double-click to reset)"></div>
         `;
-
+        this.initializeResize(section);
         // Initialize both files and FAQ data after creating the section
     // Use setTimeout to ensure the DOM is ready
         setTimeout(() => {
@@ -215,7 +219,91 @@ const SubjectService = {
             }
         }
     },
+    updateSidebarNavigation() {
+        const navList = document.getElementById('subject-nav-list');
+        const subjects = document.querySelectorAll('.subject-section');
+        
+        navList.innerHTML = '';
+        subjects.forEach(subject => {
+            const subjectId = subject.getAttribute('data-subject-id');
+            const subjectName = subject.querySelector('.subject-title h3').textContent;
+            
+            const navItem = document.createElement('div');
+            navItem.className = 'subject-nav-item';
+            navItem.innerHTML = `
+                <i class="fas fa-book"></i>
+                <span>${subjectName}</span>
+            `;
+            navItem.onclick = () => this.scrollToSubject(subjectId);
+            
+            navList.appendChild(navItem);
+        });
+    },initializeResize(section) {
+        const handle = section.querySelector('.resize-handle');
+        let startY, startHeight;
+    
+        const startResize = (e) => {
+            startY = e.clientY;
+            startHeight = section.offsetHeight;
+            section.classList.add('resizing');
+            
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+        };
+    
+        const resize = (e) => {
+            const diff = e.clientY - startY;
+            const newHeight = Math.max(300, Math.min(1000, startHeight + diff));
+            section.style.height = `${newHeight}px`;
+            
+            // Adjust scroll position to keep content in view while resizing
+            const scrollContainer = document.querySelector('.main-content');
+            if (scrollContainer) {
+                const rect = section.getBoundingClientRect();
+                if (rect.bottom > window.innerHeight) {
+                    scrollContainer.scrollTop += diff;
+                }
+            }
+        };
+    
+        const stopResize = () => {
+            section.classList.remove('resizing');
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+        };
+    
+        const resetSize = () => {
+            const defaultHeight = section.getAttribute('data-default-height');
+            section.style.height = defaultHeight;
+        };
+    
+        handle.addEventListener('mousedown', startResize);
+        handle.addEventListener('dblclick', resetSize);
+    },
 
+    scrollToSubject(subjectId) {
+        const subjectSection = document.querySelector(`[data-subject-id="${subjectId}"]`);
+        if (subjectSection) {
+            subjectSection.scrollIntoView({ behavior: 'smooth' });
+            
+            // Highlight the section briefly
+            subjectSection.style.transition = 'background-color 0.5s';
+            subjectSection.style.backgroundColor = '#f0f7ff';
+            setTimeout(() => {
+                subjectSection.style.backgroundColor = '';
+            }, 1000);
+
+            // Update active state in navigation
+            document.querySelectorAll('.subject-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const navItem = Array.from(document.querySelectorAll('.subject-nav-item'))
+                .find(item => item.textContent.trim() === subjectSection.querySelector('.subject-title h3').textContent.trim());
+            if (navItem) {
+                navItem.classList.add('active');
+            }
+        }
+    },
 
 
 
@@ -251,6 +339,7 @@ const SubjectService = {
             
             ModalService.closeModal('create-subject-modal');
             this.loadSubjects();
+            this.updateSidebarNavigation();
         } catch (error) {
             errorElement.textContent = error.message;
             errorElement.style.display = 'block';
@@ -274,23 +363,54 @@ const SubjectService = {
         try {
             const response = await fetch(`/professor/drive/subjects/${subjectId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, description })
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    name: name, 
+                    description: description 
+                })
             });
-
+    
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.error || 'Failed to update subject');
             }
+    
+            // Get the updated data
+            const data = await response.json();
+    
+            // Update the UI immediately
+            const subjectSection = document.querySelector(`[data-subject-id="${subjectId}"]`);
+            if (subjectSection) {
+                const titleElement = subjectSection.querySelector('.subject-title h3');
+                const descriptionElement = subjectSection.querySelector('.subject-description');
+                
+                if (titleElement) {
+                    titleElement.textContent = name;
+                }
+                if (descriptionElement) {
+                    descriptionElement.textContent = description || 'No description';
+                }
+            }
+    
+            // Update sidebar navigation
+            this.updateSidebarNavigation();
             
+            // Close the modal
             ModalService.closeModal('edit-subject-modal');
-            this.loadSubjects();  // Refresh the subjects list
+            
+            // Show success message
+            alert('Subject updated successfully');
             
         } catch (error) {
+            console.error('Error updating subject:', error);
             errorElement.textContent = error.message;
             errorElement.style.display = 'block';
         }
     },
+
+
 
     async deleteDriveSubject(subjectId) {
         if (!confirm('Are you sure you want to delete this subject? This will also delete the Drive folder.')) {
@@ -305,6 +425,7 @@ const SubjectService = {
             if (!response.ok) throw new Error('Failed to delete subject');
             
             this.loadSubjects();
+            this.updateSidebarNavigation();
         } catch (error) {
             console.error('Error deleting subject:', error);
             alert('Failed to delete subject');
