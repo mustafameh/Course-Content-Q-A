@@ -114,3 +114,20 @@ window.addEventListener('message', function(event) {
     }
 });
 
+// Add to your existing script.js
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show a brief success message
+        const tooltip = document.createElement('div');
+        tooltip.className = 'copy-tooltip';
+        tooltip.textContent = 'URL copied!';
+        document.body.appendChild(tooltip);
+        
+        setTimeout(() => {
+            tooltip.remove();
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+

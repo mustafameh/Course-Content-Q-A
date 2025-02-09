@@ -41,6 +41,23 @@
                     </div>
                 </div>
 
+
+                <div class="quick-links-section">
+                    <h3>Quick Links</h3>
+                    <div class="chat-link">
+                        <a href="/{{ current_user.username.split('@')[0].replace('.', '-') }}" target="_blank" class="chat-link-btn">
+                            <i class="fas fa-comments"></i>
+                            View My Chat Interface
+                        </a>
+                        <small class="chat-link-info">
+                            Share this link with students: 
+                            <span class="chat-url" onclick="copyToClipboard(this.textContent)">
+                                {{ request.host_url }}{{ current_user.username.split('@')[0].replace('.', '-') }}
+                            </span>
+                            <i class="fas fa-copy copy-icon"></i>
+                        </small>
+                    </div>
+                </div>
                 
                     
                     <!-- Add this new section -->

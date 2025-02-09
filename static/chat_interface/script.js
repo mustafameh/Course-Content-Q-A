@@ -5,10 +5,12 @@ class CourseCompanion {
 
     constructor() {
         this.currentSubjectId = null;
+        this.viewType = document.body.dataset.viewType; // 'global' or 'professor'
+        this.professorId = document.body.dataset.professorId;
         this.initializeElements();
         this.addEventListeners();
-        this.conversation_history = []; // Add this line
-        this.currentFeedbackContext = null; // Add this line
+        this.conversation_history = [];
+        this.currentFeedbackContext = null;
     }
 
     initializeElements() {
@@ -35,13 +37,28 @@ class CourseCompanion {
 
     async loadSubjects() {
         try {
-            const response = await fetch('/chat/subjects');
-            const data = await response.json();
+            let url = '/chat/subjects';
             
+            // Add professor_id parameter if in professor view
+            if (this.viewType === 'professor' && this.professorId) {
+                url += `?professor_id=${this.professorId}`;
+            }
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            // Clear existing options
+            this.elements.subjectSelect.innerHTML = '<option value="">Select a subject</option>';
+
+            // Add new options
             data.subjects.forEach(subject => {
                 const option = document.createElement('option');
                 option.value = subject.id;
                 option.textContent = subject.name;
+                if (this.viewType === 'global') {
+                    // In global view, show professor name with subject
+                    option.textContent += ` (Prof. ${subject.professor_name})`;
+                }
                 this.elements.subjectSelect.appendChild(option);
             });
         } catch (error) {

@@ -22,39 +22,39 @@ def get_session_key(subject_id: int) -> str:
 def get_available_subjects():
     """Get list of subjects that have knowledge bases"""
     try:
-        # First get all vector bases that exist
+        professor_id = request.args.get('professor_id', None)
+        
         vector_base_path = os.path.join("data", "vector_bases")
         if not os.path.exists(vector_base_path):
             return jsonify({"subjects": []})
-
+            
         available_subjects = []
         db = next(get_db())
-
-        # Iterate through professor directories
-        for professor_dir in os.listdir(vector_base_path):
-            if professor_dir.startswith('professor_'):
-                professor_path = os.path.join(vector_base_path, professor_dir)
-                professor_id = int(professor_dir.split('_')[1])
-
-                # Iterate through subject directories
-                for subject_dir in os.listdir(professor_path):
-                    if subject_dir.startswith('subject_'):
-                        subject_id = int(subject_dir.split('_')[1])
-                        
-                        # Get subject details from database
-                        subject = db.query(Subject).filter_by(
-                            id=subject_id,
-                            professor_id=professor_id
-                        ).first()
-                        
-                        if subject:
-                            available_subjects.append({
-                                "id": subject.id,
-                                "name": subject.name,
-                                "professor_id": subject.professor_id
-                            })
-
+        
+        query = db.query(Subject)
+        
+        # Filter by professor if specified
+        if professor_id:
+            query = query.filter(Subject.professor_id == professor_id)
+            
+        subjects = query.all()
+        
+        for subject in subjects:
+            # Check if vector store exists for this subject
+            professor_dir = f'professor_{subject.professor_id}'
+            subject_dir = f'subject_{subject.id}'
+            subject_path = os.path.join(vector_base_path, professor_dir, subject_dir)
+            
+            if os.path.exists(subject_path):
+                available_subjects.append({
+                    "id": subject.id,
+                    "name": subject.name,
+                    "professor_id": subject.professor_id,
+                    "professor_name": subject.professor.username.split('@')[0]
+                })
+                
         return jsonify({"subjects": available_subjects})
+        
     except Exception as e:
         print(f"Error loading subjects: {str(e)}")
         return jsonify({"error": f"Failed to load subjects: {str(e)}"}), 500

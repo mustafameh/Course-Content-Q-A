@@ -1585,3 +1585,62 @@ textarea.input-field {
 .subject-section:not(.resizing) {
     transition: height 0.3s ease;
 }
+
+.quick-links-section {
+    padding: 15px;
+    margin-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quick-links-section h3 {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 15px;
+    opacity: 0.7;
+}
+
+.chat-link {
+    margin-top: 10px;
+}
+
+.chat-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.chat-link-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-link-info {
+    display: block;
+    margin-top: 8px;
+    color: #fff;
+    opacity: 0.7;
+    font-size: 12px;
+}
+
+.chat-url {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin: 4px 0;
+    cursor: pointer;
+}
+
+.copy-icon {
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.copy-icon:hover {
+    opacity: 0.8;
+}

@@ -318,3 +318,43 @@ button:disabled {
     border: none;
     color: white;
 }
+
+/* Add to your existing CSS */
+
+.header {
+    padding: 1rem;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 1rem;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+/* Style for professor view */
+body[data-view-type="professor"] .header {
+    background: #e3f2fd;
+}
+
+/* Style for global view */
+body[data-view-type="global"] .header {
+    background: #f5f5f5;
+}
+
+.subject-selection {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+#subject-select {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}

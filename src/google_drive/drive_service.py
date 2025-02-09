@@ -327,17 +327,34 @@ class GoogleDriveService:
         except HttpError:
             return False
         
-    def download_file(self, file_id):
-        """Download a file's content"""
+    def download_file(self, file_id, destination_path=None):
+        """
+        Download a file's content
+        Args:
+            file_id: The ID of the file to download
+            destination_path: Optional path to save the file. If provided, saves to file
+        """
         try:
             request = self.service.files().get_media(fileId=file_id)
-            file_content = request.execute()
             
-            # For text files (like CSV), decode the content
-            if isinstance(file_content, bytes):
-                return file_content.decode('utf-8')
-            return file_content
-            
+            if destination_path:
+                # If destination path provided, use MediaIoBaseDownload
+                fh = io.FileIO(destination_path, mode='wb')
+                downloader = MediaIoBaseDownload(fh, request)
+                
+                done = False
+                while done is False:
+                    status, done = downloader.next_chunk()
+                
+                fh.close()
+                return destination_path
+            else:
+                # If no destination, return content directly
+                file_content = request.execute()
+                if isinstance(file_content, bytes):
+                    return file_content.decode('utf-8')
+                return file_content
+                
         except Exception as e:
             print(f"Error downloading file: {str(e)}")
             raise

@@ -1,8 +1,9 @@
 from flask import Flask, render_template, jsonify, current_app
 from flask_cors import CORS
 from src.auth import auth_bp, configure_auth
-from src.models import Base, engine
+from src.models import Base, engine, User, get_db
 import os
+from contextlib import closing
 
 app = Flask(__name__, 
     static_url_path='',
@@ -43,13 +44,42 @@ from src.faq_routes import faq_bp
 app.register_blueprint(faq_bp)
 
 # Add this route
-@app.route('/chat')
-def chat():
-    return render_template('chat_interface/index.html')
 
 @app.route('/register')
 def register():
+    
     return render_template('register_page/register.html')
+
+
+# In app.py (Add these new routes)
+
+from flask import redirect, url_for
+from flask_login import current_user
+
+@app.route('/chat')
+def chat():
+    """Global chat view showing all subjects"""
+    return render_template('chat_interface/index.html', view_type='global')
+
+@app.route('/<professor_username>')
+def professor_chat(professor_username):
+    """Professor-specific chat view"""
+    # Get the professor from the database
+    with closing(next(get_db())) as db:
+        professor = db.query(User).filter(
+            User.username.like(f"{professor_username}@%"),
+            User.role == 'professor'
+        ).first()
+        
+        if not professor:
+            return redirect(url_for('chat'))
+            
+    return render_template(
+        'chat_interface/index.html',
+        view_type='professor',
+        professor_id=professor.id,
+        professor_name=professor_username
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
