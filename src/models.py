@@ -60,8 +60,21 @@ class User(Base, UserMixin):  # Added UserMixin
             raise ValueError("Username must be a valid email address")
         return username
     
-
-
+    @property
+    def url_username(self):
+        """Get URL-safe username for routing"""
+        email_part = self.username.split('@')[0] if '@' in self.username else self.username
+        return email_part.replace('.', '-')
+    
+    @classmethod
+    def get_by_url_username(cls, url_username, db):
+        """Find user by URL username"""
+        # Convert URL username back to possible email username
+        email_username = url_username.replace('-', '.')
+        return db.query(cls).filter(
+            cls.role == 'professor',
+            cls.username.ilike(f"{email_username}@%")
+        ).first()
     
     
 class ProfessorProfile(Base):

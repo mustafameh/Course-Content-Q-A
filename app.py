@@ -64,22 +64,22 @@ def chat():
 @app.route('/<professor_username>')
 def professor_chat(professor_username):
     """Professor-specific chat view"""
-    # Get the professor from the database
     with closing(next(get_db())) as db:
-        professor = db.query(User).filter(
-            User.username.like(f"{professor_username}@%"),
-            User.role == 'professor'
-        ).first()
+        # Use the new get_by_url_username method
+        professor = User.get_by_url_username(professor_username, db)
         
-        if not professor:
+        if not professor or professor.role != 'professor':
             return redirect(url_for('chat'))
             
-    return render_template(
-        'chat_interface/index.html',
-        view_type='professor',
-        professor_id=professor.id,
-        professor_name=professor_username
-    )
+        # Get the display name (without email domain)
+        display_name = professor.username.split('@')[0]
+            
+        return render_template(
+            'chat_interface/index.html',
+            view_type='professor',
+            professor_id=professor.id,
+            professor_name=display_name
+        )
 
 if __name__ == '__main__':
     app.run(debug=True)
