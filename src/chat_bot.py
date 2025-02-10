@@ -9,14 +9,10 @@ import os
 import json
 import requests
 import spacy
-from flair.models import SequenceTagger
-from flair.data import Sentence
 from typing import List, Dict
 from langchain.schema import Document
 from src.config import settings
-
-# Load Flair NER model
-flair_tagger = SequenceTagger.load("flair/ner-english")
+import spacy 
 
 
 
@@ -33,16 +29,12 @@ class ChatBot:
         
     def _extract_entities(self, text: str) -> List[str]:
         """Extract entities using both Flair and spaCy"""
-        # Flair NER
-        flair_sentence = Sentence(text)
-        flair_tagger.predict(flair_sentence)
-        flair_entities = [entity.text for entity in flair_sentence.get_spans('ner')]
         
         # spaCy NER for additional entity types
         spacy_doc = self.ner_pipeline(text)
-        spacy_entities = [ent.text for ent in spacy_doc.ents]
+    
         
-        return list(set(flair_entities + spacy_entities))
+        return [ent.text for ent in spacy_doc.ents]
     
     
     def _check_pronouns(self, text: str) -> bool:
@@ -138,6 +130,7 @@ class ChatBot:
     def query(self, question: str) -> str:
         # Augment query with entities
         augmented_query = self._augment_query(question)
+        print("Current Entity Buffer: " , self.entity_buffer)
         print("Query to vector base:", augmented_query)
         
         # Retrieve and filter documents

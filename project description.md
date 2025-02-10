@@ -3,7 +3,7 @@ Objective:
 Create a platform where professors can upload and manage course materials, announcements, and answers to frequently asked questions (FAQs). The system utilizes Retrieval-Augmented Generation (RAG) to provide students with an interactive interface where they can ask questions about the course and receive answers generated from the uploaded content.
 
 Key Features
-Professor/Admin Portal:
+Professo Portal:
 
 Secure Login System: Authentication mechanisms to ensure only authorized professors can access the admin features.
 Course Creation and Management: Professors can create courses/subjects and organize them.
