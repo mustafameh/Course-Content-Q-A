@@ -28,51 +28,59 @@
             <a href="#features">Features</a>
             <a href="#find-professor">Find Professor</a>
             <a href="#contact">Contact</a>
-            <a href="{{ url_for('login_page') }}" class="login-btn">Login</a>
-            <a href="{{ url_for('register') }}" class="register-btn">Register as Professor</a>
+            <a href="{{ url_for('login_page') }}" class="login-btn">Professor Login</a>
+            <a 
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
         <h1>24/7 Intelligent Course Assistance</h1>
-        <p>Transform your learning experience with AI-powered course assistance, available anytime, anywhere.</p>
+        <p>Transform student learning experience with AI-powered course assistance, available anytime, anywhere.</p>
         <div class="hero-buttons">
-            <a href="{{ url_for('chat') }}" class="cta-button">Start Learning</a>
-            <a href="{{ url_for('register') }}" class="secondary-button">Become a Professor</a>
+            <a href="{{ url_for('chat') }}" class="cta-button">Explore Chats</a>
+            <a href="{{ url_for('register') }}" class="secondary-button">Register Interest</a>
         </div>
     </section>
 
-    <!-- Features Section -->
     <section id="features" class="features">
-        <h2>How It Works</h2>
         <div class="feature-grid">
             <div class="feature-card">
                 <i class="fas fa-chalkboard-teacher"></i>
-                <h3>For Professors</h3>
-                <p>Create subject spaces, upload course materials, and build an intelligent knowledge base for your students.</p>
+                <h3>Easy Course Setup</h3>
+                <p>Create subject spaces and upload course materials once. Our system automatically builds an intelligent knowledge base for your students.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-clock-rotate-left"></i>
+                <h3>Time-Saving Automation</h3>
+                <p>Reduce repetitive questions. Answer once, let our AI handle future similar queries. Free up your time for more important academic activities.</p>
             </div>
             <div class="feature-card">
                 <i class="fas fa-robot"></i>
-                <h3>AI-Powered Learning</h3>
-                <p>Our RAG-based chatbot provides instant, accurate answers based on your course materials.</p>
+                <h3>AI-Powered Assistance</h3>
+                <p>Our RAG-based chatbot provides instant, accurate answers based on your course materials, available 24/7 for your students.</p>
             </div>
             <div class="feature-card">
                 <i class="fas fa-comments"></i>
-                <h3>Interactive Q&A</h3>
-                <p>Students can ask questions naturally, and professors can manage FAQs to improve responses.</p>
+                <h3>Smart FAQ Management</h3>
+                <p>When students ask similar questions about assignments, our system learns from your single response to help countless students.</p>
             </div>
             <div class="feature-card">
-                <i class="fas fa-clock"></i>
-                <h3>24/7 Availability</h3>
-                <p>Access course assistance whenever you need it, with continuous learning improvement.</p>
+                <i class="fas fa-chart-line"></i>
+                <h3>Continuous Improvement</h3>
+                <p>System gets smarter with each interaction. Identify common confusion points and update course materials effectively.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-tasks"></i>
+                <h3>Workload Reduction</h3>
+                <p>Significantly reduce email overload and repetitive office hour questions. Let AI handle routine queries while you focus on teaching.</p>
             </div>
         </div>
     </section>
 
     <!-- Find Professor Section -->
     <section id="find-professor" class="find-professor">
-        <h2>Find Your Professor</h2>
+        <h2>Find Your Professor's Chat</h2>
         <div class="search-container">
             <input type="text" id="professorSearch" placeholder="Search for a professor...">
             <div id="searchResults" class="search-results"></div>
@@ -99,7 +107,12 @@
 
     <!-- Contact Section -->
     <section id="contact" class="contact">
-        <h2>Contact Us</h2>
+        <h2>Contact</h2>
+        <div class="contact-info">
+            <p>Email me directly at: 
+                <a href="mailto:mustafamehmood8998@gmail.com">mustafamehmood8998@gmail.com</a>
+            </p>
+        </div>
         <div class="contact-container">
             <form id="contactForm">
                 <input type="text" placeholder="Name" required>
