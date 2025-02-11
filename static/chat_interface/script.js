@@ -11,6 +11,7 @@ class CourseCompanion {
         this.addEventListeners();
         this.conversation_history = [];
         this.currentFeedbackContext = null;
+        this.initializeTheme();
     }
 
     initializeElements() {
@@ -33,6 +34,26 @@ class CourseCompanion {
 
         // Load subjects when page loads
         document.addEventListener('DOMContentLoaded', () => this.loadSubjects());
+    }
+    initializeTheme() {
+        const themeToggle = document.getElementById('theme-toggle');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        
+        document.body.classList.toggle('dark-mode', savedTheme === 'dark');
+        this.updateThemeIcon(savedTheme);
+    
+        themeToggle.addEventListener('click', () => this.toggleTheme());
+    }
+    
+    toggleTheme() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        this.updateThemeIcon(isDark ? 'dark' : 'light');
+    }
+    
+    updateThemeIcon(theme) {
+        const icon = document.querySelector('#theme-toggle i');
+        icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
     }
 
     async loadSubjects() {
@@ -167,7 +188,9 @@ class CourseCompanion {
 
     addMessage(text, type) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}-message`;
+        // Add animation class based on message type
+        const animationClass = type === 'bot' ? 'message-appear-left' : 'message-appear-right';
+        messageDiv.className = `message ${type}-message ${animationClass}`;
         
         if (type === 'bot') {
             const messageContent = document.createElement('div');
@@ -184,7 +207,7 @@ class CourseCompanion {
             } else {
                 messageContent.textContent = text;
             }
-
+    
             // Add feedback button
             const feedbackButton = document.createElement('span');
             feedbackButton.className = 'feedback-button';
@@ -197,22 +220,37 @@ class CourseCompanion {
             messageDiv.textContent = text;
         }
         
+        // Add animation cleanup
+        messageDiv.addEventListener('animationend', () => {
+            messageDiv.classList.remove(animationClass);
+        });
+        
         this.elements.chatContainer.appendChild(messageDiv);
         this.scrollToBottom();
     }
 
     addSystemMessage(text) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'message system-message';
+        messageDiv.className = 'message system-message message-appear-left';
         messageDiv.textContent = text;
+        
+        messageDiv.addEventListener('animationend', () => {
+            messageDiv.classList.remove('message-appear-left');
+        });
+        
         this.elements.chatContainer.appendChild(messageDiv);
         this.scrollToBottom();
     }
-
+    
     showError(text) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'message error-message';
+        messageDiv.className = 'message error-message message-appear-left';
         messageDiv.textContent = 'Error: ' + text;
+        
+        messageDiv.addEventListener('animationend', () => {
+            messageDiv.classList.remove('message-appear-left');
+        });
+        
         this.elements.chatContainer.appendChild(messageDiv);
         this.scrollToBottom();
     }
@@ -235,7 +273,7 @@ class CourseCompanion {
 
     showTypingIndicator() {
         const indicator = document.createElement('div');
-        indicator.className = 'typing-indicator';
+        indicator.className = 'typing-indicator message-appear-left';
         indicator.innerHTML = `
             <span></span>
             <span></span>

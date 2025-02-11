@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         {% if view_type == 'professor' %}
             CourseCompanion - Professor {{ professor_name }}'s Subjects
@@ -12,107 +14,125 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body data-view-type="{{ view_type }}" {% if view_type == 'professor' %}data-professor-id="{{ professor_id }}"{% endif %}>
-    <div class="chat-wrapper">
-        <div class="chat-container">
-            <div class="chat-header">
-                <h1>CourseCompanion</h1>
-                {% if view_type == 'professor' %}
-                    <p class="subtitle">Professor {{ professor_name }}'s Subjects</p>
-                {% else %}
-                    <p class="subtitle">Your 24/7 Course Assistant</p>
-                {% endif %}
-
-                {% if view_type == 'professor' %}
-                    <div class="view-toggle">
-                        <a href="{{ url_for('chat') }}" class="toggle-link">
-                            <i class="fas fa-globe"></i> View All Subjects
-                        </a>
+<body data-view-type="{{ view_type }}" {% if view_type == 'professor' %}data-professor-id="{{ professor_id }}"{% endif %} class="light-mode">
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="logo-icon-stack">
+                    <div class="icon-circle">
+                        <i class="fas fa-book-open icon-book"></i>
                     </div>
-                {% endif %}
-            </div>
-
-            <div class="subject-selector">
-                <select id="subject-select" onchange="initializeChat()">
-                    <option value="">
-                        {% if view_type == 'professor' %}
-                            Select one of your subjects
-                        {% else %}
-                            Select a subject
-                        {% endif %}
-                    </option>
-                </select>
-            </div>
-            
-            <div class="chat-messages" id="chat-container">
-                <!-- Messages will be added here -->
-                {% if view_type == 'professor' %}
-                    <div class="welcome-message system-message">
-                        Welcome to your subject-specific chat interface, Professor {{ professor_name }}.
+                    <div class="icon-chat-bubble">
+                        <i class="fas fa-comment-dots icon-chat"></i>
                     </div>
-                {% endif %}
-            </div>
-            
-            <div class="input-container">
-                <input 
-                    type="text" 
-                    id="message-input" 
-                    placeholder="Ask your question..." 
-                    disabled
-                >
-                <button onclick="sendMessage()" id="send-button" disabled>
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-            
-            <div class="controls">
-                <button onclick="resetChat()" id="reset-button" disabled>
-                    <i class="fas fa-redo"></i> Reset Chat
-                </button>
-                {% if view_type == 'global' %}
-                    <div class="view-info">
-                        <i class="fas fa-info-circle"></i>
-                        Viewing all available subjects
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Feedback Modal -->
-    <div class="modal-overlay" id="feedbackModal">
-        <div class="feedback-modal">
-            <div class="modal-header">
-                <h3>Submit Question for Review</h3>
-                <p>Would you like this question to be reviewed by the professor for a more detailed answer?</p>
-            </div>
-            <div class="modal-content">
-                <div class="question-edit">
-                    <label>Your Question:</label>
-                    <textarea 
-                        class="feedback-textarea" 
-                        id="questionForReview" 
-                        placeholder="Edit your question if needed"
-                    ></textarea>
+                </div>
+                <div class="logo-text">
+                    <span class="text-course">Course</span>
+                    <span class="text-companion">Companion</span>
                 </div>
             </div>
-            <div class="modal-buttons">
-                <button 
-                    class="modal-button cancel-button" 
-                    onclick="courseCompanion.closeFeedbackModal()"
-                >
-                    Cancel
+            
+            <div class="header-controls">
+                {% if view_type == 'professor' %}
+                    <a href="{{ url_for('chat') }}" class="view-all-btn">
+                        <i class="fas fa-globe"></i> View All Subjects
+                    </a>
+                {% endif %}
+                <button id="theme-toggle" class="theme-toggle">
+                    <i class="fas fa-moon"></i>
                 </button>
-                <button 
-                    class="modal-button submit-button" 
-                    onclick="courseCompanion.submitFeedback()"
-                >
-                    Submit for Review
-                </button>
+            </div>
+        </header>
+
+        <!-- Main Chat Interface -->
+        <main class="chat-interface">
+            <div class="subject-section">
+                <div class="subject-header">
+                    {% if view_type == 'professor' %}
+                        <h2>Your Subjects</h2>
+                    {% else %}
+                        <h2>Available Subjects</h2>
+                    {% endif %}
+                </div>
+                <div class="subject-selector">
+                    <select id="subject-select" onchange="initializeChat()">
+                        <option value="">
+                            {% if view_type == 'professor' %}
+                                Select one of your subjects
+                            {% else %}
+                                Select a subject
+                            {% endif %}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-container">
+                    <!-- Welcome message -->
+                    <div class="message system-message">
+                        {% if view_type == 'professor' %}
+                            <p>Welcome, Professor {{ professor_name }}. Select a subject to begin.</p>
+                        {% else %}
+                            <p>Welcome to CourseCompanion. Select a subject to start asking questions.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="chat-controls">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            id="message-input" 
+                            placeholder="Ask your question..." 
+                            disabled
+                        >
+                        <button onclick="sendMessage()" id="send-button" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="additional-controls">
+                        <button onclick="resetChat()" id="reset-button" disabled class="reset-button">
+                            <i class="fas fa-redo"></i> Reset Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Feedback Modal -->
+        <div class="modal-overlay" id="feedbackModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Submit Question for Review</h3>
+                    <button class="close-modal" onclick="courseCompanion.closeFeedbackModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like this question to be reviewed by the professor?</p>
+                    <div class="feedback-form">
+                        <label for="questionForReview">Your Question:</label>
+                        <textarea 
+                            id="questionForReview" 
+                            placeholder="Edit your question if needed"
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-button cancel" onclick="courseCompanion.closeFeedbackModal()">
+                        Cancel
+                    </button>
+                    <button class="modal-button submit" onclick="courseCompanion.submitFeedback()">
+                        Submit for Review
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script type="module">
         window.viewType = "{{ view_type }}";
         {% if view_type == 'professor' %}
@@ -120,14 +140,5 @@
         {% endif %}
     </script>
     <script src="{{ url_for('static', filename='chat_interface/script.js') }}"></script>
-
-
-
-
-
-
-
-
-
 </body>
 </html>
