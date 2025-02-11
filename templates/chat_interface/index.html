@@ -50,9 +50,8 @@
             <div class="subject-section">
                 <div class="subject-header">
                     {% if view_type == 'professor' %}
-                        <h2>Your Subjects</h2>
                     {% else %}
-                        <h2>Available Subjects</h2>
+                        <h3>Available Subjects: </h3>
                     {% endif %}
                 </div>
                 <div class="subject-selector">
@@ -73,7 +72,7 @@
                     <!-- Welcome message -->
                     <div class="message system-message">
                         {% if view_type == 'professor' %}
-                            <p>Welcome, Professor {{ professor_name }}. Select a subject to begin.</p>
+                            <p>Welcome to Professor {{ professor_name }}'s Course Assiatance'. Select a subject to begin.</p>
                         {% else %}
                             <p>Welcome to CourseCompanion. Select a subject to start asking questions.</p>
                         {% endif %}
