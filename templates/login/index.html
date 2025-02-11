@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Course Q&A System - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='login/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <div class="logo-icon-stack">
+                <div class="icon-circle">
+                    <i class="fas fa-book-open icon-book"></i>
+                </div>
+                <div class="icon-chat-bubble">
+                    <i class="fas fa-comment-dots icon-chat"></i>
+                </div>
+            </div>
+            <div class="logo-text">
+                <span class="text-course">Course</span>
+                <span class="text-companion">Companion</span>
+            </div>
+        </div>
+
+        <div class="header">
+            <p>Sign in to your account</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Email</label>
+                <input type="email" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit">Sign In</button>
+            
+            <div id="error" class="error"></div>
+        </form>
+        
+        <div class="register-link">
+            <p>Don't have an account? <a href="/register">Register as Professor</a></p>
+        </div>
+    </div>
+
+    
+    <script src="{{ url_for('static', filename='login/drive-service.js') }}"></script>
+</body>
+</html>

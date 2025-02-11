@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourseCompanion - 24/7 Course Assistance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo-container">
+            <div class="logo-icon-stack">
+                <div class="icon-circle">
+                    <i class="fas fa-book-open icon-book"></i>
+                </div>
+                <div class="icon-chat-bubble">
+                    <i class="fas fa-comment-dots icon-chat"></i>
+                </div>
+            </div>
+            <div class="logo-text">
+                <span class="text-course">Course</span>
+                <span class="text-companion">Companion</span>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#find-professor">Find Professor</a>
+            <a href="#contact">Contact</a>
+            <a href="{{ url_for('login_page') }}" class="login-btn">Login</a>
+            <a href="{{ url_for('register') }}" class="register-btn">Register as Professor</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>24/7 Intelligent Course Assistance</h1>
+        <p>Transform your learning experience with AI-powered course assistance, available anytime, anywhere.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('chat') }}" class="cta-button">Start Learning</a>
+            <a href="{{ url_for('register') }}" class="secondary-button">Become a Professor</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2>How It Works</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <h3>For Professors</h3>
+                <p>Create subject spaces, upload course materials, and build an intelligent knowledge base for your students.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-robot"></i>
+                <h3>AI-Powered Learning</h3>
+                <p>Our RAG-based chatbot provides instant, accurate answers based on your course materials.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-comments"></i>
+                <h3>Interactive Q&A</h3>
+                <p>Students can ask questions naturally, and professors can manage FAQs to improve responses.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-clock"></i>
+                <h3>24/7 Availability</h3>
+                <p>Access course assistance whenever you need it, with continuous learning improvement.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Find Professor Section -->
+    <section id="find-professor" class="find-professor">
+        <h2>Find Your Professor</h2>
+        <div class="search-container">
+            <input type="text" id="professorSearch" placeholder="Search for a professor...">
+            <div id="searchResults" class="search-results"></div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stat-container">
+            <div class="stat-item">
+                <span class="stat-number" id="professorCount">0</span>
+                <span class="stat-label">Professors</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="subjectCount">0</span>
+                <span class="stat-label">Subjects</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="documentCount">0</span>
+                <span class="stat-label">Documents</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <h2>Contact Us</h2>
+        <div class="contact-container">
+            <form id="contactForm">
+                <input type="text" placeholder="Name" required>
+                <input type="email" placeholder="Email" required>
+                <textarea placeholder="Message" required></textarea>
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">
+                <div class="logo-container">
+                    <!-- Logo component -->
+                </div>
+            </div>
+            <div class="footer-links">
+                <div class="link-column">
+                    <h4>Quick Links</h4>
+                    <a href="#features">Features</a>
+                    <a href="#find-professor">Find Professor</a>
+                    <a href="#contact">Contact</a>
+                </div>
+                <div class="link-column">
+                    <h4>For Professors</h4>
+                    <a href="{{ url_for('register') }}">Register</a>
+                    <a href="{{ url_for('login_page') }}">Login</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 CourseCompanion. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+</body>
+</html>
