@@ -32,7 +32,7 @@ app.register_blueprint(professor_bp)
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('home/index.html')
 
 # Changed function name to login_page
 @app.route('/login')
