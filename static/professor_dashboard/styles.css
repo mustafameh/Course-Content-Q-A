@@ -58,30 +58,30 @@ body {
 
 /* Google Drive Section */
 .google-drive-section {
-    background: rgba(255,255,255,0.1);
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px 0;
+    padding: 8px 0;  /* Reduced padding */
+    border-bottom: 0.01px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 8px;  /* Added small margin at bottom */
 }
 
-.google-drive-section h3 {
-    color: #ecf0f1;
-    margin-bottom: 15px;
-    font-size: 18px;
+.nav-section-header {
+    font-size: 0.9rem;  /* Slightly smaller font */
+    margin-bottom: 6px;  /* Reduced margin */
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .connection-status {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 6px;  /* Reduced gap */
+    margin-bottom: 6px;  /* Reduced margin */
 }
 
 .status-indicator {
-    width: 12px;
-    height: 12px;
+    width: 6px;  /* Smaller indicator */
+    height: 6px;  /* Smaller indicator */
     border-radius: 50%;
-    transition: background-color 0.3s ease;
 }
 
 .status-connected {
@@ -151,16 +151,23 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 6px;
     background-color: #4285f4;
     color: white;
-    padding: 12px 24px;
+    padding: 6px 8px;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s ease;
     width: 100%;
+}
+.google-btn i {
+    font-size: 0.9rem;  /* Smaller icon */
+}
+#drive-status-text {
+    font-size: 0.75rem;  /* Smaller font size */
+    color: var(--text-secondary);
 }
 
 .google-btn:hover {
@@ -1440,7 +1447,7 @@ textarea.input-field {
 .sidebar-nav {
     margin-top: 20px;
     padding: 10px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    
 }
 
 .sidebar-nav-header {
@@ -1644,3 +1651,98 @@ textarea.input-field {
 .copy-icon:hover {
     opacity: 0.8;
 }
+
+/* Logo Styles */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.logo-icon-stack {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.icon-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #2196f3;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-book {
+    color: white;
+    font-size: 1.2rem;
+}
+
+.icon-chat-bubble {
+    position: absolute;
+    background: #1976d2;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    right: -5px;
+    bottom: -5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-chat {
+    color: white;
+    font-size: 0.7rem;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.text-course {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2196f3;
+}
+
+.text-companion {
+    font-size: 1rem;
+    color: #1976d2;
+}
+
+.dashboard-label {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding-left: 3.5rem;
+}
+
+/* Updated Profile Section */
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.info-item i {
+    width: 16px;
+    color: #2196f3;
+}
+
+/* Update existing brand-section styles *
+
+/* Update existing profile-section styles */

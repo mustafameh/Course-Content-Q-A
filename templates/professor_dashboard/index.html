@@ -8,85 +8,124 @@
     <script src="{{ url_for('static', filename='professor_dashboard/sidebar.js') }}" defer></script>
 </head>
 <body>
-    
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="flash-message {{ category }}">
-                {{ message }}
-                <button onclick="this.parentElement.remove()" class="close-flash">×</button>
-            </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    {{ message }}
+                    <button onclick="this.parentElement.remove()" class="close-flash">×</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <div class="dashboard">
+        <button class="sidebar-toggle">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
         <div class="sidebar">
-            <button class="sidebar-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
+            
             
             <div class="sidebar-content">
+                <!-- Logo and Brand -->
                 <div class="brand-section">
-                    <h2>CourseCompanion</h2>
-                    <p class="tagline">The 24/7 available course assistant</p>
+                    <div class="logo-container">
+                        <div class="logo-icon-stack">
+                            <div class="icon-circle">
+                                <i class="fas fa-book-open icon-book"></i>
+                            </div>
+                            <div class="icon-chat-bubble">
+                                <i class="fas fa-comment-dots icon-chat"></i>
+                            </div>
+                        </div>
+                        <div class="logo-text">
+                            <span class="text-course">Course</span>
+                            <span class="text-companion">Companion</span>
+                        </div>
+                    </div>
+                    <p class="dashboard-label">Dashboard</p>
                 </div>
 
+                <!-- Profile Info -->
                 <div class="profile-section">
-                    <h3>Professor Dashboard</h3>
                     <div class="profile-info">
-                        <p id="professor-email">Loading...</p>
-                        <p id="professor-institution">Loading...</p>
-                        <p id="professor-department">Loading...</p>
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span id="professor-email">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-university"></i>
+                            <span id="professor-institution">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span id="professor-department">Loading...</span>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Quick Navigation -->
+                <div class="sidebar-nav">
+                    <div class="nav-section-header">
+                        <i class="fas fa-compass"></i>
+                        <span>Quick Navigation</span>
+                    </div>
+                    <div class="subject-nav-list" id="subject-nav-list">
+                        <!-- Subject links will be dynamically added here -->
+                    </div>
+                </div>
 
+                <!-- Quick Links -->
                 <div class="quick-links-section">
-                    <h3>Quick Links</h3>
+                    <div class="nav-section-header">
+                        <i class="fas fa-link"></i>
+                        <span>Quick Links</span>
+                    </div>
                     <div class="chat-link">
                         <a href="/{{ current_user.url_username }}" target="_blank" class="chat-link-btn">
                             <i class="fas fa-comments"></i>
-                            View My Chat Interface
+                            <span>View Chat Interface</span>
                         </a>
-                        <small class="chat-link-info">
-                            Share this link with students: 
-                            <span class="chat-url" onclick="copyToClipboard(this.textContent)">
-                                {{ request.host_url }}{{ current_user.url_username }}
-                            </span>
-                            <i class="fas fa-copy copy-icon"></i>
-                        </small>
+                        <div class="chat-link-info">
+                            <span>Share with students:</span>
+                            <div class="share-url">
+                                <span class="chat-url" onclick="copyToClipboard(this.textContent)">
+                                    {{ request.host_url }}{{ current_user.url_username }}
+                                </span>
+                                <button class="copy-btn" onclick="copyToClipboard(document.querySelector('.chat-url').textContent)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                    
-                    <!-- Add this new section -->
-                    <div class="sidebar-nav">
-                        <div class="sidebar-nav-header">
-                            Quick Navigation
-                        </div>
-                        <div class="subject-nav-list" id="subject-nav-list">
-                            <!-- Subject links will be dynamically added here -->
-                        </div>
-                    </div>
-                
-
+                <!-- Google Drive Connection -->
                 <div class="google-drive-section">
-                    <h3>Google Drive Connection</h3>
+                    <div class="nav-section-header">
+                        <i class="fab fa-google-drive"></i>
+                        <span>Drive Connection</span>
+                    </div>
                     <div class="connection-status">
                         <div id="drive-status-indicator" class="status-indicator"></div>
                         <span id="drive-status-text">Checking connection...</span>
                     </div>
-                    
                     <div id="drive-connect-btn-container">
                         <button onclick="DriveService.connectGoogleDrive()" class="google-btn" id="connect-drive-btn">
-                            <i class="fab fa-google"></i> Connect Drive
+                            <i class="fab fa-google"></i>
+                            <span>Connect Drive</span>
                         </button>
                     </div>
                 </div>
 
+                <!-- Logout Button -->
                 <button onclick="logout()" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
                 </button>
             </div>
         </div>
@@ -136,12 +175,13 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="{{ url_for('static', filename='professor_dashboard/drive-service.js') }}"></script>
-<script src="{{ url_for('static', filename='professor_dashboard/modal-service.js') }}"></script>
-<script src="{{ url_for('static', filename='professor_dashboard/file-service.js') }}"></script>
-<script src="{{ url_for('static', filename='professor_dashboard/faq-service.js') }}"></script>
-<script src="{{ url_for('static', filename='professor_dashboard/subject-service.js') }}"></script>
-<script src="{{ url_for('static', filename='professor_dashboard/knowledge-base-service.js') }}"></script>
-<script src="{{ url_for('static', filename='professor_dashboard/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/modal-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/file-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/faq-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/subject-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/knowledge-base-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='professor_dashboard/script.js') }}"></script>
 </body>
 </html>

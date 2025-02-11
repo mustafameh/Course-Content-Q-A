@@ -1,4 +1,3 @@
-// sidebar.js
 document.addEventListener('DOMContentLoaded', () => {
     const toggleButton = document.querySelector('.sidebar-toggle');
     const sidebar = document.querySelector('.sidebar');
@@ -6,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const icon = toggleButton.querySelector('i') || document.createElement('i');
     
     // Initialize icon
-    icon.className = 'fas fa-bars';
+    icon.className = 'fas fa-chevron-left';
     if (!toggleButton.querySelector('i')) {
         toggleButton.appendChild(icon);
     }
@@ -16,12 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
         mainContent.classList.toggle('expanded');
         
         // Update icon
+        icon.className = sidebar.classList.contains('collapsed') 
+            ? 'fas fa-chevron-right' 
+            : 'fas fa-chevron-left';
+
+        // Update toggle button position
         if (sidebar.classList.contains('collapsed')) {
-            icon.className = 'fas fa-bars';
-            toggleButton.title = 'Expand Sidebar';
+            toggleButton.style.left = '20px'; // Adjust as needed
         } else {
-            icon.className = 'fas fa-times';
-            toggleButton.title = 'Collapse Sidebar';
+            toggleButton.style.left = `calc(var(--sidebar-width) - 16px)`; // Adjust as needed
         }
     });
 });

@@ -31,31 +31,55 @@
 }
 
 .sidebar-toggle {
-    position: fixed; /* Changed to fixed */
-    left: calc(var(--sidebar-width) - 15px); /* Position relative to sidebar width */
+    position: fixed;
+    left: var(--sidebar-width);
     top: 20px;
     background: var(--accent-color);
     border: none;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     color: white;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     z-index: 1001;
-    transition: left var(--transition-speed) ease;
+    transition: all var(--transition-speed) ease;
+    margin-left: -16px; /* Half of the button width */
 }
 
-.sidebar.collapsed .sidebar-toggle {
-    left: 10px; /* Move toggle button when sidebar is collapsed */
+/* When sidebar is collapsed */
+.sidebar.collapsed ~ .sidebar-toggle {
+    left: 0;
+    margin-left: 20px; /* Give some space from the left edge */
 }
 
-.sidebar-toggle:hover {
-    background: #1976d2;
-    transform: scale(1.05);
+/* Modern hamburger icon style */
+.sidebar-toggle .hamburger-icon {
+    width: 18px;
+    height: 14px;
+    position: relative;
+    transform: rotate(0deg);
+    transition: .5s ease-in-out;
+    cursor: pointer;
+}
+
+/* Add smooth transition for the icon */
+.sidebar-toggle i {
+    transition: transform 0.3s ease;
+}
+.sidebar-toggle .hamburger-icon span {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: white;
+    border-radius: 2px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
 }
 
 .sidebar-content {
@@ -78,9 +102,32 @@
     border-radius: 3px;
 }
 
-.sidebar.collapsed .sidebar-content {
+.sidebar-toggle .hamburger-icon span:nth-child(1) {
+    top: 0px;
+}
+
+.sidebar-toggle .hamburger-icon span:nth-child(2) {
+    top: 6px;
+}
+
+.sidebar-toggle .hamburger-icon span:nth-child(3) {
+    top: 12px;
+}
+
+/* Animation for collapsed state */
+.sidebar.collapsed ~ .sidebar-toggle .hamburger-icon span:nth-child(1) {
+    top: 6px;
+    transform: rotate(135deg);
+}
+
+.sidebar.collapsed ~ .sidebar-toggle .hamburger-icon span:nth-child(2) {
     opacity: 0;
-    pointer-events: none;
+    left: -60px;
+}
+
+.sidebar.collapsed ~ .sidebar-toggle .hamburger-icon span:nth-child(3) {
+    top: 6px;
+    transform: rotate(-135deg);
 }
 
 /* Brand Section */
@@ -103,52 +150,37 @@
     margin: 5px 0;
 }
 
-/* Profile Section */
 .profile-section {
-    margin-bottom: 30px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    padding: 12px 0;
 }
-
-.profile-section h3 {
-    margin: 0 0 15px 0;
-    font-size: 18px;
-    color: var(--text-primary);
-}
-
-.profile-info p {
-    margin: 8px 0;
-    font-size: 14px;
-    color: var(--text-secondary);
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Google Drive Section */
 .google-drive-section {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
+    border-bottom: 0.01px solid rgba(255, 255, 255, 0.1);
 }
-
-.google-drive-section h3 {
-    margin: 0 0 15px 0;
-    font-size: 16px;
-    color: var(--text-primary);
+.status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #a0a0a0;
 }
 
 .connection-status {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
 }
 
 .status-indicator {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
+    background: #ccc;
 }
 
 .status-connected {
@@ -230,6 +262,9 @@
     font-size: 16px;
 }
 
+.sidebar.collapsed .sidebar-toggle i {
+    transform: rotate(180deg);
+}
 /* Responsive Design */
 @media (max-width: 768px) {
     :root {
@@ -240,4 +275,37 @@
         width: 30px;
         height: 30px;
     }
+}
+
+
+/* Update sidebar background */
+.sidebar {
+    background: #1e1e2d;
+    color: #ffffff;
+}
+
+/* Make sections more compact */
+.sidebar-content {
+    padding: 16px;
+}
+
+.brand-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Quick Links more compact */
+.quick-links-section {
+    padding: 12px 0;
+}
+
+.chat-link-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+.chat-link-info {
+    font-size: 0.75rem;
+    margin-top: 8px;
 }
